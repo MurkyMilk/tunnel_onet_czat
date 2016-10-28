@@ -5,6 +5,7 @@ import threading
 
 from auth import auth
 from encoding import applyEncoding
+from http_fetching import get_http
 
 color = 0  # obsluga kolorow, 0 aby wylaczyc;
 bold = 0  # obsluga pogrubienia czcionki;
@@ -31,7 +32,7 @@ wersja = sys.version[0] + sys.version[2]
 if (wersja <= ""):
     pass
 else:
-    import ssl
+    pass
 
 print("onettunel.py v.2010-04 / by Olo (2008-2010) unix.onlinewebshop.net")
 print("poprawki Husar, 08-07-2011\r\n\r\n")
@@ -123,50 +124,6 @@ def time(cz):
     except:
         a = cz
     return a
-
-
-def fetch(host, z, mssl):
-    a = bytearray()
-    s = socket()
-    if mssl == 1:
-        s.connect((host, 443))
-        if (wersja <= "25"):
-            sssl = ssl(s)
-        else:
-            sssl = ssl.wrap_socket(s)
-        sssl.write(str.encode(z))
-        sssl.read()
-        del sssl
-        s.close()
-        return ""
-    s.connect((host, 80))
-    s.send(str.encode(z))
-    while True:
-        b = s.recv(1024)
-        if b == b'':
-            break
-        a.extend(b)
-        print(a)
-    s.close()
-    return a.decode("utf-8", "ignore")
-
-
-def get_http(host, z, get_uo=0, mssl=0):
-
-    a = fetch(host, z, mssl)
-    if get_uo == 1:
-        x = a.find("<uoKey>")
-        if x == -1:
-            return ""
-        x2 = a.find("</uoKey>")
-        return a[x + 7:x2]
-    c = findall("Cookie:(.+?;)", a)
-    c += findall("cookie:(.+?;)", a)
-
-    if len(c) > 0:
-        return ''.join(c)
-    else:
-        return ""
 
 
 def mainLoop(sock, ID):
@@ -546,7 +503,8 @@ def send_welcome_messages(lbold, lkolor, sock):
 s = socket(AF_INET, SOCK_STREAM)
 try:
     s.bind(('', BindPort))
-except:
+except Exception as e:
+    print(e)
     get_date()
     print("ERROR: nie mozna zabindowac portu %s, wybierz inny BindPort")
     s.close()

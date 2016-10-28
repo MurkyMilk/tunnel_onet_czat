@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
 ############### CONFIG ###############
+import ssl
 import threading
 
-from http_fetching import zassaj
 
 kolor = 0  # obsluga kolorow, 0 aby wylaczyc;
 bold = 0  # obsluga pogrubienia czcionki;
@@ -55,9 +55,35 @@ else:
     BindPort = port
 
 
-def zassaj_http(host, version, z, mssl=0, get_uo=0):
+def zassaj(host, z, mssl):
+    a = bytearray()
+    s = socket()
+    if mssl == 1:
+        s.connect((host, 443))
+        if (wersja <= "25"):
+            sssl = ssl(s)
+        else:
+            sssl = ssl.wrap_socket(s)
+        sssl.write(str.encode(z))
+        sssl.read()
+        del sssl
+        s.close()
+        return ""
+    s.connect((host, 80))
+    s.send(str.encode(z))
+    while True:
+        b = s.recv(1024)
+        if b == b'':
+            break
+        a.extend(b)
+        print(a)
+    s.close()
+    return a.decode("utf-8", "ignore")
 
-    a = zassaj(host, z, mssl, version)
+
+def zassaj_http(host, z, get_uo=0, mssl=0):
+
+    a = zassaj(host, z, mssl)
     if get_uo == 1:
         x = a.find("<uoKey>")
         if x == -1:
@@ -76,12 +102,14 @@ def zassaj_http(host, version, z, mssl=0, get_uo=0):
 def autoryzuj(nickname, password):
     Cookie = "Cookie:"
     print(3)
-    Cookie += zassaj_http("kropka.onet.pl", wersja , "GET /_s/kropka/1?DV=czat/applet/FULL HTTP/1.1\r\n" \
-                                            "Host: kropka.onet.pl\r\n" \
-                                            "Connection: keep-alive\r\n\r\n")
+    Cookie += zassaj_http("kropka.onet.pl",
+                          "GET /_s/kropka/1?DV=czat/applet/FULL HTTP/1.1\r\n" \
+                          "Host: kropka.onet.pl\r\n" \
+                          "Connection: keep-alive\r\n\r\n")
     print(4)
-    Cookie += zassaj_http("czat.onet.pl", wersja,  "GET /myimg.gif HTTP/1.1\r\n" \
-                                          "Host: czat.onet.pl\r\n" + Cookie + "\r\n\r\n")
+    Cookie += zassaj_http("czat.onet.pl",
+                          "GET /myimg.gif HTTP/1.1\r\n" \
+                          "Host: czat.onet.pl\r\n" + Cookie + "\r\n\r\n")
     POST = "api_function=getUoKey&params=a:3:{" \
            "s:4:\"nick\";s:%d:\"%s\";" \
            "s:8:\"tempNick\";i:%d;" \
@@ -92,42 +120,45 @@ def autoryzuj(nickname, password):
         POST = POST % (len(nickname), nickname, 0)
         POST_s = "r=&url=&login=%s&haslo=%s&app_id=20&ssl=1&ok=1" % (nickname, password)
         POST_OVERRIDE = "api_function=userOverride&params=a:3:{s:4:\"nick\";s:%d:\"%s\";}" % (len(nickname), nickname)
-        zassaj_http("secure.onet.pl",wersja, "POST /mlogin.html HTTP/1.1\r\n" \
-                                      "Content-Type: application/x-www-form-urlencoded\r\n" \
-                                      "Content-Length: %d\r\n" \
-                                      "Cache-Control: no-cache\r\n" \
-                                      "Pragma: no-cache\r\n" \
-                                      "User-Agent: Mozilla/4.0 (Windows NT 5.0)\r\n" \
-                                      "Host: secure.onet.pl\r\n" \
-                                      "Connection: keep-alive\r\n" \
-                                      "%s\r\n\r\n" \
-                                      "%s" % (len(POST_s), Cookie, POST_s), 1, 0)
-        zassaj_http("czat.onet.pl",wersja, "POST /include/ajaxapi.xml.php3 HTTP/1.1\r\n" \
-                                    "Content-Type: application/x-www-form-urlencoded\r\n" \
-                                    "Content-Length: %d\r\n" \
-                                    "Cache-Control: no-cache\r\n" \
-                                    "Pragma: no-cache\r\n" \
-                                    "User-Agent: Mozilla/4.0 (Windows NT 5.0)\r\n" \
-                                    "Host: czat.onet.pl\r\n" \
-                                    "Accept: text/html, image/gif, image/jpeg, *; q=.2, */*;" \
-                                    "q=.2\r\n" \
-                                    "Connection: close\r\n" \
-                                    "%s\r\n\r\n" \
-                                    "%s" % (len(POST_OVERRIDE), Cookie, POST_OVERRIDE), 1)
+        zassaj_http("secure.onet.pl",
+                    "POST /mlogin.html HTTP/1.1\r\n" \
+                    "Content-Type: application/x-www-form-urlencoded\r\n" \
+                    "Content-Length: %d\r\n" \
+                    "Cache-Control: no-cache\r\n" \
+                    "Pragma: no-cache\r\n" \
+                    "User-Agent: Mozilla/4.0 (Windows NT 5.0)\r\n" \
+                    "Host: secure.onet.pl\r\n" \
+                    "Connection: keep-alive\r\n" \
+                    "%s\r\n\r\n" \
+                    "%s" % (len(POST_s), Cookie, POST_s), 0, 1)
+        zassaj_http("czat.onet.pl",
+                    "POST /include/ajaxapi.xml.php3 HTTP/1.1\r\n" \
+                    "Content-Type: application/x-www-form-urlencoded\r\n" \
+                    "Content-Length: %d\r\n" \
+                    "Cache-Control: no-cache\r\n" \
+                    "Pragma: no-cache\r\n" \
+                    "User-Agent: Mozilla/4.0 (Windows NT 5.0)\r\n" \
+                    "Host: czat.onet.pl\r\n" \
+                    "Accept: text/html, image/gif, image/jpeg, *; q=.2, */*;" \
+                    "q=.2\r\n" \
+                    "Connection: close\r\n" \
+                    "%s\r\n\r\n" \
+                    "%s" % (len(POST_OVERRIDE), Cookie, POST_OVERRIDE), 1)
 
     uoKey = \
-        zassaj_http("czat.onet.pl",wersja, "POST /include/ajaxapi.xml.php3 HTTP/1.1\r\n" \
-                                    "Content-Type: application/x-www-form-urlencoded\r\n" \
-                                    "Content-Length: %d\r\n" \
-                                    "Cache-Control: no-cache\r\n" \
-                                    "Pragma: no-cache\r\n" \
-                                    "User-Agent: Mozilla/4.0 (Windows NT 5.0)\r\n" \
-                                    "Host: czat.onet.pl\r\n" \
-                                    "Accept: text/html, image/gif, image/jpeg, *; q=.2, */*;" \
-                                    "q=.2\r\n" \
-                                    "Connection: close\r\n" \
-                                    "%s\r\n\r\n" \
-                                    "%s" % (len(POST), Cookie, POST), 1)
+        zassaj_http("czat.onet.pl",
+                    "POST /include/ajaxapi.xml.php3 HTTP/1.1\r\n" \
+                    "Content-Type: application/x-www-form-urlencoded\r\n" \
+                    "Content-Length: %d\r\n" \
+                    "Cache-Control: no-cache\r\n" \
+                    "Pragma: no-cache\r\n" \
+                    "User-Agent: Mozilla/4.0 (Windows NT 5.0)\r\n" \
+                    "Host: czat.onet.pl\r\n" \
+                    "Accept: text/html, image/gif, image/jpeg, *; q=.2, */*;" \
+                    "q=.2\r\n" \
+                    "Connection: close\r\n" \
+                    "%s\r\n\r\n" \
+                    "%s" % (len(POST), Cookie, POST), 1)
     return uoKey
 
 
@@ -282,6 +313,7 @@ def jedziesz(sock, ID):
     sys.stdout.write("nick: %s\n" % nickname)
     try:
         print(1)
+        from autoryzacja.autoryzacja import autoryzuj
         UOkey = autoryzuj(nickname, password)
         print(2)
     # sock.send((":fake.host 666 nik : 10[Tunel] \r\n"

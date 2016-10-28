@@ -4,6 +4,7 @@
 import threading
 
 from auth import auth
+from encoding import applyEncoding
 
 color = 0  # obsluga kolorow, 0 aby wylaczyc;
 bold = 0  # obsluga pogrubienia czcionki;
@@ -192,24 +193,7 @@ def mainLoop(sock, ID):
             print("wtf")
             break
 
-    sock.send((str.encode(":fake.host 666 nik : 10[Tunel] uzycie:\r\n"
-               ":fake.host 666 nik : 10[Tunel] /set nick 10Twoj_nick\r\n"
-               ":fake.host 666 nik : 10[Tunel] /server 127.0.0.1 7777 10haslo_do_nicka\r\n"
-               ":fake.host 666 nik : 10[Tunel] \r\n"
-               ":fake.host 666 nik : 10[Tunel] dla nicka tymczasowego: /set nick 10~Twoj_nick\r\n")))
-    sock.send((str.encode(":fake.host 666 nik : 10[Tunel] \r\n"
-               ":fake.host 666 nik : 10[Tunel] ustawienia polaczenia:\r\n"
-               ":fake.host 666 nik : 10[Tunel] obsluga kolorow:5              %d\r\n"
-               ":fake.host 666 nik : 10[Tunel] obsluga pogrubienia czcionki:5 %d\r\n"
-               ":fake.host 666 nik : 10[Tunel] \r\n") % (lkolor, lbold)))
-    sock.send((str.encode(":fake.host 666 nik : 10[Tunel] komendy:\r\n"
-               ":fake.host 666 nik : 10[Tunel] /sets 10<--- pokazuje ustawienia\r\n"
-               ":fake.host 666 nik : 10[Tunel] /uo 10<--- zwraca UoKey\r\n"
-               ":fake.host 666 nik : 10[Tunel] /sets kolor 0 10<---5 010: wylacza kolor,5 110: wlaczyc\r\n"
-               ":fake.host 666 nik : 10[Tunel] /sets kodowanie 0 10<---5 010: ISO 8859-2 (irssi),5 110: CP-1250 (mIRC 6.*),5 210: UTF-8 (mIRC 7.*)\r\n"
-               ":fake.host 666 nik : 10[Tunel] /sets bold 0 10<---5 010: wylacza pogrubienie czcionki,5 110: wlacza\r\n")))
-    sock.send(str.encode(
-        (":fake.host 666 nik : 10[Tunel] /sets emoty 0 10<---5 010: %Ihihi%,5 110: <hihi>,5 210: //hihi\r\n")))
+    send_welcome_messages(lbold, lkolor, sock)
     if not TUNEL_PASS == "":
         password = password.split(':')
         if not len(password) == 2:
@@ -272,54 +256,7 @@ def mainLoop(sock, ID):
                         sock.send(
                             (":fake.host 666 nik : 10[Tunel] ustawiono typ kodowania:5                %d\r\n") % (
                             encode))
-                    if encode == 1:
-                        bufor = bufor.replace('\xa5', '\xa1')
-                        bufor = bufor.replace('\xb9', '\xb1')
-                        bufor = bufor.replace('\x8c', '\xa6')
-                        bufor = bufor.replace('\x9c', '\xb6')
-                        bufor = bufor.replace('\x8f', '\xac')
-                        bufor = bufor.replace('\x9f', '\xbc')
-                    elif encode == 2:
-                        bufor = bufor.replace("\xc4\x84", "\xa1")
-                        bufor = bufor.replace("\xc4\x86", "\xc6")
-                        bufor = bufor.replace("\xc4\x98", "\xca")
-                        bufor = bufor.replace("\xc5\x81", "\xa3")
-                        bufor = bufor.replace("\xc5\x83", "\xd1")
-                        bufor = bufor.replace("\xc3\x93", "\xd3")
-                        bufor = bufor.replace("\xc5\x9a", "\xa6")
-                        bufor = bufor.replace("\xc5\xb9", "\xac")
-                        bufor = bufor.replace("\xc5\xbb", "\xaf")
-                        bufor = bufor.replace("\xc4\x85", "\xb1")
-                        bufor = bufor.replace("\xc4\x87", "\xe6")
-                        bufor = bufor.replace("\xc4\x99", "\xea")
-                        bufor = bufor.replace("\xc5\x82", "\xb3")
-                        bufor = bufor.replace("\xc5\x84", "\xf1")
-                        bufor = bufor.replace("\xc3\xb3", "\xf3")
-                        bufor = bufor.replace("\xc5\x9b", "\xb6")
-                        bufor = bufor.replace("\xc5\xba", "\xbc")
-                        bufor = bufor.replace("\xc5\xbc", "\xbf")
-                    bufor = bufor.replace('\x03' + "14", "%C959595%")
-                    bufor = bufor.replace('\x03' + "5", "%C990033%")
-                    bufor = bufor.replace('\x03' + "7", "%Cc86c00%")
-                    bufor = bufor.replace('\x03' + "5", "%C623c00%")
-                    bufor = bufor.replace('\x03' + "13", "%Cce00ff%")
-                    bufor = bufor.replace('\x03' + "4", "%Ce40f0f%")
-                    bufor = bufor.replace('\x03' + "12", "%C3030ce%")
-                    bufor = bufor.replace('\x03' + "3", "%C008100%")
-                    bufor = bufor.replace('\x03' + "10", "%C1a866e%")
-                    bufor = bufor.replace('\x03' + "11", "%C006699%")
-                    bufor = bufor.replace('\x03' + "6", "%C8800ab%")
-                    bufor = bufor.replace('\x03' + "2", "%C0f2ab1%")
-                    bufor = bufor.replace('\x03' + "7", "%Cff6500%")
-                    bufor = bufor.replace('\x03' + "4", "%Cff0000%")
-                    if lemoty == 1:
-                        b = findall("(<(.+?)>)", bufor)
-                        for c in b:
-                            bufor = bufor.replace(c[0], "%I" + c[1] + "%")
-                    elif lemoty == 2:
-                        b = findall("(//(\w+))", bufor)
-                        for c in b:
-                            bufor = bufor.replace(c[0], "%I" + c[1] + "%")
+                    bufor = applyEncoding(bufor, encode, lemoty)
                     tmpb = bufor.split(' ')
                     if tmpb[0] == "PRIVMSG":
                         if tmpb[1][0:2] == '#^':
@@ -583,6 +520,27 @@ def mainLoop(sock, ID):
             sock.close()
             onet.close()
             break
+
+
+def send_welcome_messages(lbold, lkolor, sock):
+    sock.send((str.encode(":fake.host 666 nik : 10[Tunel] uzycie:\r\n"
+                          ":fake.host 666 nik : 10[Tunel] /set nick 10Twoj_nick\r\n"
+                          ":fake.host 666 nik : 10[Tunel] /server 127.0.0.1 7777 10haslo_do_nicka\r\n"
+                          ":fake.host 666 nik : 10[Tunel] \r\n"
+                          ":fake.host 666 nik : 10[Tunel] dla nicka tymczasowego: /set nick 10~Twoj_nick\r\n")))
+    sock.send((str.encode(":fake.host 666 nik : 10[Tunel] \r\n"
+                          ":fake.host 666 nik : 10[Tunel] ustawienia polaczenia:\r\n"
+                          ":fake.host 666 nik : 10[Tunel] obsluga kolorow:5              %d\r\n"
+                          ":fake.host 666 nik : 10[Tunel] obsluga pogrubienia czcionki:5 %d\r\n"
+                          ":fake.host 666 nik : 10[Tunel] \r\n") % (lkolor, lbold)))
+    sock.send((str.encode(":fake.host 666 nik : 10[Tunel] komendy:\r\n"
+                          ":fake.host 666 nik : 10[Tunel] /sets 10<--- pokazuje ustawienia\r\n"
+                          ":fake.host 666 nik : 10[Tunel] /uo 10<--- zwraca UoKey\r\n"
+                          ":fake.host 666 nik : 10[Tunel] /sets kolor 0 10<---5 010: wylacza kolor,5 110: wlaczyc\r\n"
+                          ":fake.host 666 nik : 10[Tunel] /sets kodowanie 0 10<---5 010: ISO 8859-2 (irssi),5 110: CP-1250 (mIRC 6.*),5 210: UTF-8 (mIRC 7.*)\r\n"
+                          ":fake.host 666 nik : 10[Tunel] /sets bold 0 10<---5 010: wylacza pogrubienie czcionki,5 110: wlacza\r\n")))
+    sock.send(str.encode(
+        (":fake.host 666 nik : 10[Tunel] /sets emoty 0 10<---5 010: %Ihihi%,5 110: <hihi>,5 210: //hihi\r\n")))
 
 
 s = socket(AF_INET, SOCK_STREAM)

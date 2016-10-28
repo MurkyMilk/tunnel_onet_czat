@@ -3,9 +3,8 @@
 ############### CONFIG ###############
 import threading
 
-from auth import auth
+from auth import auth, authorization
 from encoding import applyEncoding
-from http_fetching import get_http
 
 color = 0  # obsluga kolorow, 0 aby wylaczyc;
 bold = 0  # obsluga pogrubienia czcionki;
@@ -57,65 +56,6 @@ if len(sys.argv) == 2:
 else:
     BindPort = port
 
-def authorization(nickname, password):
-    Cookie = "Cookie:"
-    Cookie += get_http("kropka.onet.pl",
-                          "GET /_s/kropka/1?DV=czat/applet/FULL HTTP/1.1\r\n" \
-                          "Host: kropka.onet.pl\r\n" \
-                          "Connection: keep-alive\r\n\r\n")
-    Cookie += get_http("czat.onet.pl",
-                          "GET /myimg.gif HTTP/1.1\r\n" \
-                          "Host: czat.onet.pl\r\n" + Cookie + "\r\n\r\n")
-    POST = "api_function=getUoKey&params=a:3:{" \
-           "s:4:\"nick\";s:%d:\"%s\";" \
-           "s:8:\"tempNick\";i:%d;" \
-           "s:7:\"version\";s:22:\"1.1(20110425-2020 - R)\";}"
-    if nickname[0] == '~':
-        POST = POST % (len(nickname) - 1, nickname[1:], 1)
-    else:
-        POST = POST % (len(nickname), nickname, 0)
-        POST_s = "r=&url=&login=%s&haslo=%s&app_id=20&ssl=1&ok=1" % (nickname, password)
-        POST_OVERRIDE = "api_function=userOverride&params=a:3:{s:4:\"nick\";s:%d:\"%s\";}" % (len(nickname), nickname)
-        get_http("secure.onet.pl",
-                    "POST /mlogin.html HTTP/1.1\r\n" \
-                    "Content-Type: application/x-www-form-urlencoded\r\n" \
-                    "Content-Length: %d\r\n" \
-                    "Cache-Control: no-cache\r\n" \
-                    "Pragma: no-cache\r\n" \
-                    "User-Agent: Mozilla/4.0 (Windows NT 5.0)\r\n" \
-                    "Host: secure.onet.pl\r\n" \
-                    "Connection: keep-alive\r\n" \
-                    "%s\r\n\r\n" \
-                    "%s" % (len(POST_s), Cookie, POST_s), 0, 1)
-        get_http("czat.onet.pl",
-                    "POST /include/ajaxapi.xml.php3 HTTP/1.1\r\n" \
-                    "Content-Type: application/x-www-form-urlencoded\r\n" \
-                    "Content-Length: %d\r\n" \
-                    "Cache-Control: no-cache\r\n" \
-                    "Pragma: no-cache\r\n" \
-                    "User-Agent: Mozilla/4.0 (Windows NT 5.0)\r\n" \
-                    "Host: czat.onet.pl\r\n" \
-                    "Accept: text/html, image/gif, image/jpeg, *; q=.2, */*;" \
-                    "q=.2\r\n" \
-                    "Connection: close\r\n" \
-                    "%s\r\n\r\n" \
-                    "%s" % (len(POST_OVERRIDE), Cookie, POST_OVERRIDE), 1)
-
-    uoKey = \
-        get_http("czat.onet.pl",
-                    "POST /include/ajaxapi.xml.php3 HTTP/1.1\r\n" \
-                    "Content-Type: application/x-www-form-urlencoded\r\n" \
-                    "Content-Length: %d\r\n" \
-                    "Cache-Control: no-cache\r\n" \
-                    "Pragma: no-cache\r\n" \
-                    "User-Agent: Mozilla/4.0 (Windows NT 5.0)\r\n" \
-                    "Host: czat.onet.pl\r\n" \
-                    "Accept: text/html, image/gif, image/jpeg, *; q=.2, */*;" \
-                    "q=.2\r\n" \
-                    "Connection: close\r\n" \
-                    "%s\r\n\r\n" \
-                    "%s" % (len(POST), Cookie, POST), 1)
-    return uoKey
 
 def time(cz):
     a = ""

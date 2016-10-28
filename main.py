@@ -38,8 +38,8 @@ def send(s, msg):
     s.send(msg.encode("utf-8"))
 
 
-def get_date():
-    sys.stdout.write("[%s] = " % ctime())
+def get_date_string():
+    return "[%s] = " % ctime()
 
 
 def time(cz):
@@ -93,7 +93,7 @@ def init(sock, ID):
     #  sock.send((":Tunel!fake@fake.fake PRIVMSG fake :VERSION\r\n"))
     except:
         print(sys.exc_info()[0])
-        get_date()
+        get_date_string()
         my_err = "[%3d] ERROR: sprawdz swoje polaczenie sieciowe z internetem, poprawnosc wprowadzonego hasla i nicka lub dostepnosc serwerow onet.pl (zmiany autoryzacji)\r\n" % ID
         sys.stdout.write(my_err)
         sock.send(str.encode(my_err))
@@ -149,7 +149,7 @@ def mainLoop(ID, UOkey, encode, end, lbold, lemoty, lkolor, nickname, onet, sock
                     encode, lbold, lemoty, lkolor = process_message_from_client(UOkey, bufor, encode, lbold, lemoty,
                                                                                 lkolor, nickname, onet, sock, tmpb)
                 except:
-                    get_date()
+                    get_date_string()
                     print("[%3d] nick: %s = blad odczytu/zapisu z/do gniazda", (ID, nickname))
                     end = 1
                     break
@@ -168,7 +168,7 @@ def mainLoop(ID, UOkey, encode, end, lbold, lemoty, lkolor, nickname, onet, sock
                     tab = findall("(.*?\n)", bufor)
                     parse_and_send_incomining_message(encode, lbold, lemoty, lkolor, nickname, sock, tab)
                 except:
-                    get_date()
+                    get_date_string()
                     print("[%3d] nick: %s = blad odczytu/zapisu z/do gniazda", (ID, nickname))
                     end = 1
                     break
@@ -458,43 +458,62 @@ def send_welcome_messages(lbold, lkolor, sock):
 
 ##HERE COMES THE DRAGONS
 
-print("onettunel.py v.2010-04 / by Olo (2008-2010) unix.onlinewebshop.net")
-print("poprawki Husar, 08-07-2011\r\n\r\n")
-if realname == "":
-    realname = ""
-if color == 1:
-    print("Wlaczona obsluga kolorow")
-else:
-    print("Wylaczona obsluga kolorow")
-if bold == 1: print("Wlaczona obsluga pogrubienia czcionki")
-if encoding == 1: print("Wlaczona obsluga kodowania CP1250")
+def printWelcomeInfo():
+    global realname
+    print("onettunel.py v.2010-04 / by Olo (2008-2010) unix.onlinewebshop.net")
+    print("poprawki Husar, 08-07-2011\r\n\r\n")
+    if realname == "":
+        realname = ""
+    if color == 1:
+        print("Wlaczona obsluga kolorow")
+    else:
+        print("Wylaczona obsluga kolorow")
+    if bold == 1: print("Wlaczona obsluga pogrubienia czcionki")
+    if encoding == 1: print("Wlaczona obsluga kodowania CP1250")
 
 
-if len(sys.argv) == 2:
-    BindPort = int(sys.argv[1])
-else:
-    BindPort = port
+
+def getBindPort():
+    global BindPort
+    if len(sys.argv) == 2:
+        BindPort = int(sys.argv[1])
+    else:
+        BindPort = port
+
+def bindSocket(s):
+    try:
+        s.bind(('', BindPort))
+        get_date_string()
+        if local_ip != '':
+            print("server:  + $local_ip + $BindPort")
+        else:
+            print("server:" + str(gethostbyname(gethostname())) + str(BindPort))
+    except Exception as e:
+        print(e)
+        get_date_string()
+        print("ERROR: nie mozna zabindowac portu %s, wybierz inny BindPort")
+        s.close()
+        sys.exit()
+
+def createSocketConnection(s):
+    getBindPort()
+    bindSocket(s)
 
 
-s = socket(AF_INET, SOCK_STREAM)
-try:
-    s.bind(('', BindPort))
-except Exception as e:
-    print(e)
-    get_date()
-    print("ERROR: nie mozna zabindowac portu %s, wybierz inny BindPort")
-    s.close()
-    sys.exit()
-get_date()
-if local_ip != '':
-    print("server:  + $local_ip + $BindPort")
-else:
-    print("server:" + str(gethostbyname(gethostname())) + str(BindPort))
+def create_socket():
+    return socket(AF_INET, SOCK_STREAM)
+
+
+global s
+s = create_socket()
+
+printWelcomeInfo()
+createSocketConnection(s)
 s.listen(5)
 cID = 1
 while 1:
     c, cinfo = s.accept()
-    get_date()
+    get_date_string()
     sys.stdout.write("[%3d] %s:%s = " % ((cID,) + cinfo))
 
     threading.Thread(target=init,

@@ -167,14 +167,10 @@ def zassaj(host, z, mssl):
     s.connect((host, 80))
     s.send(str.encode(z))
     while True:
-        print("1")
         b = s.recv(1024)
-        print("2")
         if b == b'':
-            print("3")
             break
         a.extend(b)
-        print("4")
         print(a)
     s.close()
     return a.decode("utf-8", "ignore")
@@ -214,13 +210,9 @@ def autoryzuj(nickname, password):
     if nickname[0] == '~':
         POST = POST % (len(nickname) - 1, nickname[1:], 1)
     else:
-        print("MICHAAAAAAAAAAAL")
         POST = POST % (len(nickname), nickname, 0)
-        print("MICHAAAAAAAAAAAL")
         POST_s = "r=&url=&login=%s&haslo=%s&app_id=20&ssl=1&ok=1" % (nickname, password)
-        print("MICHAAAAAAAAAAAL")
         POST_OVERRIDE = "api_function=userOverride&params=a:3:{s:4:\"nick\";s:%d:\"%s\";}" % (len(nickname), nickname)
-        print("MICHAAAAAAAAAAAL")
         zassaj_http("secure.onet.pl",
                     "POST /mlogin.html HTTP/1.1\r\n" \
                     "Content-Type: application/x-www-form-urlencoded\r\n" \
@@ -232,7 +224,6 @@ def autoryzuj(nickname, password):
                     "Connection: keep-alive\r\n" \
                     "%s\r\n\r\n" \
                     "%s" % (len(POST_s), Cookie, POST_s), 0, 1)
-        print("MICHAAAAAAAAAAAL")
         zassaj_http("czat.onet.pl",
                     "POST /include/ajaxapi.xml.php3 HTTP/1.1\r\n" \
                     "Content-Type: application/x-www-form-urlencoded\r\n" \
@@ -247,7 +238,6 @@ def autoryzuj(nickname, password):
                     "%s\r\n\r\n" \
                     "%s" % (len(POST_OVERRIDE), Cookie, POST_OVERRIDE), 1)
 
-    print("MICHAAAAAAAAAAAL")
     uoKey = \
         zassaj_http("czat.onet.pl",
                     "POST /include/ajaxapi.xml.php3 HTTP/1.1\r\n" \
@@ -262,7 +252,6 @@ def autoryzuj(nickname, password):
                     "Connection: close\r\n" \
                     "%s\r\n\r\n" \
                     "%s" % (len(POST), Cookie, POST), 1)
-    print("MICHAAAAAAAAAAAL22222222222")
     return uoKey
 
 
@@ -283,10 +272,8 @@ def jedziesz(sock, ID):
         if not bufor.find("NICK") == -1:
             nickname = findall("NICK (.*?)(\r|\n)", bufor)[0][0]
             if nickname[0] == '~':
-                print("TENPORARY_NICK")
                 break
         if not bufor.find("PASS") == -1:
-            print("HASLO")
             password = findall("PASS (.*?)(\r|\n)", bufor)[0][0]
         if (password != "") and (nickname != ""):
             print("wtf")
@@ -310,7 +297,6 @@ def jedziesz(sock, ID):
                ":fake.host 666 nik : 10[Tunel] /sets bold 0 10<---5 010: wylacza pogrubienie czcionki,5 110: wlacza\r\n")))
     sock.send(str.encode(
         (":fake.host 666 nik : 10[Tunel] /sets emoty 0 10<---5 010: %Ihihi%,5 110: <hihi>,5 210: //hihi\r\n")))
-    print("michal")
     if not TUNEL_PASS == "":
         password = password.split(':')
         if not len(password) == 2:
@@ -324,12 +310,10 @@ def jedziesz(sock, ID):
             sock.close()
             return
         password = password[1]
-    print("WTF!!!!!!!!!!!!!!!!!!!!!!")
     sys.stdout.write("nick: %s\n" % nickname)
     try:
 
         UOkey = autoryzuj(nickname, password)
-        print("WTF????????????????????")
 
     # sock.send((":fake.host 666 nik : 10[Tunel] \r\n"
     #             ":fake.host 2012 " + nickname + " : 10[Tunel] Twoj UOkey: " + UOkey + "\r\n"))
@@ -356,20 +340,14 @@ def jedziesz(sock, ID):
     # onet.send("USER * %s czat-app.onet.pl :%s\r\n" % (UOkey, realname))
     authkey = auth(findall(":.*?801.*?:(.*?)\r", onet.recv(1024).decode("utf-8", "ignore"))[0])
     onet.send(str.encode("AUTHKEY "+ authkey + "\r\n"))
-    print("2!")
     while 1:
         (dr, dw, de) = select.select(gniazda, [], [])
-        print("3!")
         for gotowe in dr:
-            print("3!!")
             if gotowe == sock:
-                print("3!!!")
                 try:
-                    print("4!")
                     bufor = gotowe.recv(1024).decode("utf-8", "ignore")
                     if bufor == "":
                         koniec = 1
-                        print("5!")
                         break
                     if bufor.find("NOTICE") != -1 and bufor.find("VERSION") != -1:
                         if bufor.find("mIRC v6") != -1:
@@ -381,7 +359,6 @@ def jedziesz(sock, ID):
                         sock.send(
                             (":fake.host 666 nik : 10[Tunel] ustawiono typ kodowania:5                %d\r\n") % (
                             lkodowanie))
-                    print("6!")
                     if lkodowanie == 1:
                         bufor = bufor.replace('\xa5', '\xa1')
                         bufor = bufor.replace('\xb9', '\xb1')
@@ -422,7 +399,6 @@ def jedziesz(sock, ID):
                     bufor = bufor.replace('\x03' + "2", "%C0f2ab1%")
                     bufor = bufor.replace('\x03' + "7", "%Cff6500%")
                     bufor = bufor.replace('\x03' + "4", "%Cff0000%")
-                    print("7!")
                     if lemoty == 1:
                         b = findall("(<(.+?)>)", bufor)
                         for c in b:
@@ -432,7 +408,6 @@ def jedziesz(sock, ID):
                         for c in b:
                             bufor = bufor.replace(c[0], "%I" + c[1] + "%")
                     tmpb = bufor.split(' ')
-                    print("7!!")
                     if tmpb[0] == "PRIVMSG":
                         if tmpb[1][0:2] == '#^':
                             tmpb[1] = tmpb[1].replace('#^', '^')
@@ -472,7 +447,6 @@ def jedziesz(sock, ID):
                                     send(sock,"onettunel.py - dozwolone wartosci: 2, 1 i 0\r\n")
                         except:
                             pass
-                            print("7!!!")
                             send(sock,(":fake.host 666 nik : 10[Tunel] ustawienia polaczenia:\r\n"
                                    ":fake.host 666 nik : 10[Tunel]  kolor:5     %d\r\n"
                                    ":fake.host 666 nik : 10[Tunel]  kodowanie:5 %d\r\n"
@@ -515,8 +489,6 @@ def jedziesz(sock, ID):
                             cammsg = cammsg.replace("\xbc", "\xc5\xba")
                             cammsg = cammsg.replace("\xbf", "\xc5\xbc")
                             send(sock,cammsg)
-                            print("8!")
-                    print("8!!")
                     send(onet ,bufor)
                 except:
                     dawaj_date()

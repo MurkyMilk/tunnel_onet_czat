@@ -33,17 +33,6 @@ if wersja <= "":
 else:
     pass
 
-print("onettunel.py v.2010-04 / by Olo (2008-2010) unix.onlinewebshop.net")
-print("poprawki Husar, 08-07-2011\r\n\r\n")
-if realname == "":
-    realname = ""
-if color == 1:
-    print("Wlaczona obsluga kolorow")
-else:
-    print("Wylaczona obsluga kolorow")
-if bold == 1: print("Wlaczona obsluga pogrubienia czcionki")
-if encoding == 1: print("Wlaczona obsluga kodowania CP1250")
-
 
 def send(s, msg):
     s.send(msg.encode("utf-8"))
@@ -51,12 +40,6 @@ def send(s, msg):
 
 def get_date():
     sys.stdout.write("[%s] = " % ctime())
-
-
-if len(sys.argv) == 2:
-    BindPort = int(sys.argv[1])
-else:
-    BindPort = port
 
 
 def time(cz):
@@ -470,6 +453,27 @@ def send_welcome_messages(lbold, lkolor, sock):
                           ":fake.host 666 nik : 10[Tunel] /sets bold 0 10<---5 010: wylacza pogrubienie czcionki,5 110: wlacza\r\n")))
     sock.send(str.encode(
         ":fake.host 666 nik : 10[Tunel] /sets emoty 0 10<---5 010: %Ihihi%,5 110: <hihi>,5 210: //hihi\r\n"))
+
+
+
+##HERE COMES THE DRAGONS
+
+print("onettunel.py v.2010-04 / by Olo (2008-2010) unix.onlinewebshop.net")
+print("poprawki Husar, 08-07-2011\r\n\r\n")
+if realname == "":
+    realname = ""
+if color == 1:
+    print("Wlaczona obsluga kolorow")
+else:
+    print("Wylaczona obsluga kolorow")
+if bold == 1: print("Wlaczona obsluga pogrubienia czcionki")
+if encoding == 1: print("Wlaczona obsluga kodowania CP1250")
+
+
+if len(sys.argv) == 2:
+    BindPort = int(sys.argv[1])
+else:
+    BindPort = port
 
 
 s = socket(AF_INET, SOCK_STREAM)

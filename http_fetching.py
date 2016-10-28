@@ -3,7 +3,6 @@ from re import findall
 from socket import socket
 
 
-
 def fetch(host, z, mssl):
     a = bytearray()
     s = socket()

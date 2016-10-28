@@ -28,14 +28,14 @@ import select
 import sys
 
 wersja = sys.version[0] + sys.version[2]
-if (wersja <= ""):
+if wersja <= "":
     pass
 else:
     pass
 
 print("onettunel.py v.2010-04 / by Olo (2008-2010) unix.onlinewebshop.net")
 print("poprawki Husar, 08-07-2011\r\n\r\n")
-if (realname == ""):
+if realname == "":
     realname = ""
 if color == 1:
     print("Wlaczona obsluga kolorow")
@@ -44,8 +44,10 @@ else:
 if bold == 1: print("Wlaczona obsluga pogrubienia czcionki")
 if encoding == 1: print("Wlaczona obsluga kodowania CP1250")
 
+
 def send(s, msg):
     s.send(msg.encode("utf-8"))
+
 
 def get_date():
     sys.stdout.write("[%s] = " % ctime())
@@ -114,8 +116,7 @@ def init(sock, ID):
         sock.send(str.encode(my_err))
         sock.close()
         return
-    sockets = []
-    sockets.append(sock)
+    sockets = [sock]
     onet = connect_to_onet(UOkey, nickname, sock, sockets)
     mainLoop(ID, UOkey, encode, end, lbold, lemoty, lkolor, nickname, onet, sock, sockets)
 
@@ -242,7 +243,7 @@ def process_message_from_client(UOkey, bufor, encode, lbold, lemoty, lkolor, nic
                      lkolor, encode, lbold, lemoty))
     elif tmpb[0] == "LIST":
         bufor = "SLIST\r\n"
-    elif (tmpb[0] == "PROTOCTL"):
+    elif tmpb[0] == "PROTOCTL":
         bufor = bufor.replace("NAMESX", "ONETNAMESX")
     elif tmpb[0] == "CAM":
         if tmpb[3][:2] == "on":
@@ -445,7 +446,7 @@ def set_proper_encoding(bufor, encode, sock):
         else:
             encode = 0
         sock.send(
-            (":fake.host 666 nik : 10[Tunel] ustawiono typ kodowania:5                %d\r\n") % (
+            ":fake.host 666 nik : 10[Tunel] ustawiono typ kodowania:5                %d\r\n" % (
                 encode))
     return encode
 
@@ -468,7 +469,7 @@ def send_welcome_messages(lbold, lkolor, sock):
                           ":fake.host 666 nik : 10[Tunel] /sets kodowanie 0 10<---5 010: ISO 8859-2 (irssi),5 110: CP-1250 (mIRC 6.*),5 210: UTF-8 (mIRC 7.*)\r\n"
                           ":fake.host 666 nik : 10[Tunel] /sets bold 0 10<---5 010: wylacza pogrubienie czcionki,5 110: wlacza\r\n")))
     sock.send(str.encode(
-        (":fake.host 666 nik : 10[Tunel] /sets emoty 0 10<---5 010: %Ihihi%,5 110: <hihi>,5 210: //hihi\r\n")))
+        ":fake.host 666 nik : 10[Tunel] /sets emoty 0 10<---5 010: %Ihihi%,5 110: <hihi>,5 210: //hihi\r\n"))
 
 
 s = socket(AF_INET, SOCK_STREAM)
@@ -495,5 +496,5 @@ while 1:
     threading.Thread(target=init,
                      args=(c, cID)
                      ).start()
-    cID = cID + 1
+    cID += 1
 s.close()

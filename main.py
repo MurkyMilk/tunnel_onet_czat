@@ -55,60 +55,6 @@ if len(sys.argv) == 2:
 else:
     BindPort = port
 
-
-def time(cz):
-    a = ""
-    try:
-        a = [x for x in ctime(int(cz)).split(' ') if x.find(':') != -1][0]
-    except:
-        a = cz
-    return a
-
-
-def fetch(host, z, mssl):
-    a = bytearray()
-    s = socket()
-    if mssl == 1:
-        s.connect((host, 443))
-        if (wersja <= "25"):
-            sssl = ssl(s)
-        else:
-            sssl = ssl.wrap_socket(s)
-        sssl.write(str.encode(z))
-        sssl.read()
-        del sssl
-        s.close()
-        return ""
-    s.connect((host, 80))
-    s.send(str.encode(z))
-    while True:
-        b = s.recv(1024)
-        if b == b'':
-            break
-        a.extend(b)
-        print(a)
-    s.close()
-    return a.decode("utf-8", "ignore")
-
-
-def get_http(host, z, get_uo=0, mssl=0):
-
-    a = fetch(host, z, mssl)
-    if get_uo == 1:
-        x = a.find("<uoKey>")
-        if x == -1:
-            return ""
-        x2 = a.find("</uoKey>")
-        return a[x + 7:x2]
-    c = findall("Cookie:(.+?;)", a)
-    c += findall("cookie:(.+?;)", a)
-
-    if len(c) > 0:
-        return ''.join(c)
-    else:
-        return ""
-
-
 def authorization(nickname, password):
     Cookie = "Cookie:"
     Cookie += get_http("kropka.onet.pl",
@@ -168,6 +114,58 @@ def authorization(nickname, password):
                     "%s\r\n\r\n" \
                     "%s" % (len(POST), Cookie, POST), 1)
     return uoKey
+
+def time(cz):
+    a = ""
+    try:
+        a = [x for x in ctime(int(cz)).split(' ') if x.find(':') != -1][0]
+    except:
+        a = cz
+    return a
+
+
+def fetch(host, z, mssl):
+    a = bytearray()
+    s = socket()
+    if mssl == 1:
+        s.connect((host, 443))
+        if (wersja <= "25"):
+            sssl = ssl(s)
+        else:
+            sssl = ssl.wrap_socket(s)
+        sssl.write(str.encode(z))
+        sssl.read()
+        del sssl
+        s.close()
+        return ""
+    s.connect((host, 80))
+    s.send(str.encode(z))
+    while True:
+        b = s.recv(1024)
+        if b == b'':
+            break
+        a.extend(b)
+        print(a)
+    s.close()
+    return a.decode("utf-8", "ignore")
+
+
+def get_http(host, z, get_uo=0, mssl=0):
+
+    a = fetch(host, z, mssl)
+    if get_uo == 1:
+        x = a.find("<uoKey>")
+        if x == -1:
+            return ""
+        x2 = a.find("</uoKey>")
+        return a[x + 7:x2]
+    c = findall("Cookie:(.+?;)", a)
+    c += findall("cookie:(.+?;)", a)
+
+    if len(c) > 0:
+        return ''.join(c)
+    else:
+        return ""
 
 
 def mainLoop(sock, ID):

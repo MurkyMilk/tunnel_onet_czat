@@ -3,9 +3,9 @@
 ############### CONFIG ###############
 import threading
 
-kolor = 0  # obsluga kolorow, 0 aby wylaczyc;
+color = 0  # obsluga kolorow, 0 aby wylaczyc;
 bold = 0  # obsluga pogrubienia czcionki;
-kodowanie = 2  # Kodowanie 0 - ISO, 1 - WIN, 2 - UTF;
+encoding = 2  # Kodowanie 0 - ISO, 1 - WIN, 2 - UTF;
 emoty = 1  # Emoty 0 - %Ihihi%, 1 - <hihi>, 2 - //hihi;
 #
 TUNEL_PASS = ""  # haslo do zabezpieczenia tunelu;
@@ -35,17 +35,17 @@ print("onettunel.py v.2010-04 / by Olo (2008-2010) unix.onlinewebshop.net")
 print("poprawki Husar, 08-07-2011\r\n\r\n")
 if (realname == ""):
     realname = ""
-if kolor == 1:
+if color == 1:
     print("Wlaczona obsluga kolorow")
 else:
     print("Wylaczona obsluga kolorow")
 if bold == 1: print("Wlaczona obsluga pogrubienia czcionki")
-if kodowanie == 1: print("Wlaczona obsluga kodowania CP1250")
+if encoding == 1: print("Wlaczona obsluga kodowania CP1250")
 
 def send(s, msg):
     s.send(msg.encode("utf-8"))
 
-def dawaj_date():
+def get_date():
     sys.stdout.write("[%s] = " % ctime())
 
 
@@ -55,7 +55,7 @@ else:
     BindPort = port
 
 
-def czas(cz):
+def time(cz):
     a = ""
     try:
         a = [x for x in ctime(int(cz)).split(' ') if x.find(':') != -1][0]
@@ -68,7 +68,7 @@ def auth(s):
     stringbuffer = ""
     i_list = range(16)
     ai = []
-    pomoc = []
+    help = []
     f1 = [
         29, 43, 7, 5, 52, 58, 30, 59, 26, 35,
         35, 49, 45, 4, 22, 4, 0, 7, 4, 30,
@@ -124,16 +124,16 @@ def auth(s):
         ai[i] = f1[ai[i] + i]
 
     for i in i_list:
-        pomoc.insert(i, (ai[i] + ai[p1[i]]) % 62)
-    ai = pomoc
+        help.insert(i, (ai[i] + ai[p1[i]]) % 62)
+    ai = help
 
     for i in i_list:
         ai[i] = f2[ai[i] + i]
 
-    pomoc = []
+    help = []
     for i in i_list:
-        pomoc.insert(i, (ai[i] + ai[p2[i]]) % 62)
-    ai = pomoc
+        help.insert(i, (ai[i] + ai[p2[i]]) % 62)
+    ai = help
 
     for i in i_list:
         ai[i] = f3[ai[i] + i]
@@ -150,7 +150,7 @@ def auth(s):
     return stringbuffer
 
 
-def zassaj(host, z, mssl):
+def fetch(host, z, mssl):
     a = bytearray()
     s = socket()
     if mssl == 1:
@@ -176,9 +176,9 @@ def zassaj(host, z, mssl):
     return a.decode("utf-8", "ignore")
 
 
-def zassaj_http(host, z, get_uo=0, mssl=0):
+def get_http(host, z, get_uo=0, mssl=0):
 
-    a = zassaj(host, z, mssl)
+    a = fetch(host, z, mssl)
     if get_uo == 1:
         x = a.find("<uoKey>")
         if x == -1:
@@ -194,13 +194,13 @@ def zassaj_http(host, z, get_uo=0, mssl=0):
         return ""
 
 
-def autoryzuj(nickname, password):
+def authorization(nickname, password):
     Cookie = "Cookie:"
-    Cookie += zassaj_http("kropka.onet.pl",
+    Cookie += get_http("kropka.onet.pl",
                           "GET /_s/kropka/1?DV=czat/applet/FULL HTTP/1.1\r\n" \
                           "Host: kropka.onet.pl\r\n" \
                           "Connection: keep-alive\r\n\r\n")
-    Cookie += zassaj_http("czat.onet.pl",
+    Cookie += get_http("czat.onet.pl",
                           "GET /myimg.gif HTTP/1.1\r\n" \
                           "Host: czat.onet.pl\r\n" + Cookie + "\r\n\r\n")
     POST = "api_function=getUoKey&params=a:3:{" \
@@ -213,7 +213,7 @@ def autoryzuj(nickname, password):
         POST = POST % (len(nickname), nickname, 0)
         POST_s = "r=&url=&login=%s&haslo=%s&app_id=20&ssl=1&ok=1" % (nickname, password)
         POST_OVERRIDE = "api_function=userOverride&params=a:3:{s:4:\"nick\";s:%d:\"%s\";}" % (len(nickname), nickname)
-        zassaj_http("secure.onet.pl",
+        get_http("secure.onet.pl",
                     "POST /mlogin.html HTTP/1.1\r\n" \
                     "Content-Type: application/x-www-form-urlencoded\r\n" \
                     "Content-Length: %d\r\n" \
@@ -224,7 +224,7 @@ def autoryzuj(nickname, password):
                     "Connection: keep-alive\r\n" \
                     "%s\r\n\r\n" \
                     "%s" % (len(POST_s), Cookie, POST_s), 0, 1)
-        zassaj_http("czat.onet.pl",
+        get_http("czat.onet.pl",
                     "POST /include/ajaxapi.xml.php3 HTTP/1.1\r\n" \
                     "Content-Type: application/x-www-form-urlencoded\r\n" \
                     "Content-Length: %d\r\n" \
@@ -239,7 +239,7 @@ def autoryzuj(nickname, password):
                     "%s" % (len(POST_OVERRIDE), Cookie, POST_OVERRIDE), 1)
 
     uoKey = \
-        zassaj_http("czat.onet.pl",
+        get_http("czat.onet.pl",
                     "POST /include/ajaxapi.xml.php3 HTTP/1.1\r\n" \
                     "Content-Type: application/x-www-form-urlencoded\r\n" \
                     "Content-Length: %d\r\n" \
@@ -255,13 +255,13 @@ def autoryzuj(nickname, password):
     return uoKey
 
 
-def jedziesz(sock, ID):
+def mainLoop(sock, ID):
     bufor = ""
-    koniec = 0
+    end = 0
     nickname = ""
     password = ""
-    lkodowanie = kodowanie
-    lkolor = kolor
+    encode = encoding
+    lkolor = color
     lbold = bold
     lemoty = emoty
     while 1:
@@ -313,24 +313,24 @@ def jedziesz(sock, ID):
     sys.stdout.write("nick: %s\n" % nickname)
     try:
 
-        UOkey = autoryzuj(nickname, password)
+        UOkey = authorization(nickname, password)
 
     # sock.send((":fake.host 666 nik : 10[Tunel] \r\n"
     #             ":fake.host 2012 " + nickname + " : 10[Tunel] Twoj UOkey: " + UOkey + "\r\n"))
     #  sock.send((":Tunel!fake@fake.fake PRIVMSG fake :VERSION\r\n"))
     except:
         print(sys.exc_info()[0])
-        dawaj_date()
+        get_date()
         my_err = "[%3d] ERROR: sprawdz swoje polaczenie sieciowe z internetem, poprawnosc wprowadzonego hasla i nicka lub dostepnosc serwerow onet.pl (zmiany autoryzacji)\r\n" % ID
         sys.stdout.write(my_err)
         sock.send(str.encode(my_err))
         sock.close()
         return
     print("1!")
-    gniazda = []
-    gniazda.append(sock)
+    sockets = []
+    sockets.append(sock)
     onet = socket(AF_INET, SOCK_STREAM)
-    gniazda.append(onet)
+    sockets.append(onet)
     onet.bind((local_ip, 0))
     onet.connect(("czat-app.onet.pl", 5015))
     sock.send(onet.recv(1024))
@@ -341,32 +341,32 @@ def jedziesz(sock, ID):
     authkey = auth(findall(":.*?801.*?:(.*?)\r", onet.recv(1024).decode("utf-8", "ignore"))[0])
     onet.send(str.encode("AUTHKEY "+ authkey + "\r\n"))
     while 1:
-        (dr, dw, de) = select.select(gniazda, [], [])
-        for gotowe in dr:
-            if gotowe == sock:
+        (dr, dw, de) = select.select(sockets, [], [])
+        for ready in dr:
+            if ready == sock:
                 try:
-                    bufor = gotowe.recv(1024).decode("utf-8", "ignore")
+                    bufor = ready.recv(1024).decode("utf-8", "ignore")
                     if bufor == "":
-                        koniec = 1
+                        end = 1
                         break
                     if bufor.find("NOTICE") != -1 and bufor.find("VERSION") != -1:
                         if bufor.find("mIRC v6") != -1:
-                            lkodowanie = 1
+                            encode = 1
                         elif bufor.find("mIRC v7") != -1:
-                            lkodowanie = 2
+                            encode = 2
                         else:
-                            lkodowanie = 0
+                            encode = 0
                         sock.send(
                             (":fake.host 666 nik : 10[Tunel] ustawiono typ kodowania:5                %d\r\n") % (
-                            lkodowanie))
-                    if lkodowanie == 1:
+                            encode))
+                    if encode == 1:
                         bufor = bufor.replace('\xa5', '\xa1')
                         bufor = bufor.replace('\xb9', '\xb1')
                         bufor = bufor.replace('\x8c', '\xa6')
                         bufor = bufor.replace('\x9c', '\xb6')
                         bufor = bufor.replace('\x8f', '\xac')
                         bufor = bufor.replace('\x9f', '\xbc')
-                    elif lkodowanie == 2:
+                    elif encode == 2:
                         bufor = bufor.replace("\xc4\x84", "\xa1")
                         bufor = bufor.replace("\xc4\x86", "\xc6")
                         bufor = bufor.replace("\xc4\x98", "\xca")
@@ -432,7 +432,7 @@ def jedziesz(sock, ID):
                                     send(sock,"onettunel.py - dozwolone wartosci: 2, 1 i 0\r\n")
                             elif tmpb[1] == "kodowanie":
                                 try:
-                                    lkodowanie = int(tmpb[2][0])
+                                    encode = int(tmpb[2][0])
                                 except:
                                     send(sock,"onettunel.py - dozwolone wartosci: 1 i 0\r\n")
                             elif tmpb[1] == "bold":
@@ -452,7 +452,7 @@ def jedziesz(sock, ID):
                                    ":fake.host 666 nik : 10[Tunel]  kodowanie:5 %d\r\n"
                                    ":fake.host 666 nik : 10[Tunel]  bold:5      %d\r\n"
                                    ":fake.host 666 nik : 10[Tunel]  emoty:5     %d\r\n") % (
-                                  lkolor, lkodowanie, lbold, lemoty))
+                                  lkolor, encode, lbold, lemoty))
                     elif tmpb[0] == "LIST":
                         bufor = "SLIST\r\n"
                     elif (tmpb[0] == "PROTOCTL"):
@@ -462,14 +462,14 @@ def jedziesz(sock, ID):
                             cammsg = ":WebcamServ!service@service.onet MODE " + tmpb[2] + " +Cam " + tmpb[1] + "\r\n"
                         if tmpb[3][:3] == "off":
                             cammsg = ":WebcamServ!service@service.onet MODE " + tmpb[2] + " -Cam " + tmpb[1] + "\r\n"
-                        if lkodowanie == 1:
+                        if encode == 1:
                             cammsg = cammsg.replace('\xa1', '\xa5')
                             cammsg = cammsg.replace('\xb1', '\xb9')
                             cammsg = cammsg.replace('\xa6', '\x8c')
                             cammsg = cammsg.replace('\xb6', '\x9c')
                             cammsg = cammsg.replace('\xac', '\x8f')
                             cammsg = cammsg.replace('\xbc', '\x9f')
-                        if lkodowanie == 2:
+                        if encode == 2:
                             cammsg = cammsg.replace("\xa1", "\xc4\x84")
                             cammsg = cammsg.replace("\xc6", "\xc4\x86")
                             cammsg = cammsg.replace("\xca", "\xc4\x98")
@@ -491,123 +491,123 @@ def jedziesz(sock, ID):
                             send(sock,cammsg)
                     send(onet ,bufor)
                 except:
-                    dawaj_date()
+                    get_date()
                     print("[%3d] nick: %s = blad odczytu/zapisu z/do gniazda",  (ID, nickname))
-                    koniec = 1
+                    end = 1
                     break
-            if gotowe == onet:
+            if ready == onet:
                 bufor = ""
                 try:
                     while 1:
-                        bu2 = gotowe.recv(1024).decode("utf-8", "ignore")
+                        bu2 = ready.recv(1024).decode("utf-8", "ignore")
                         if bu2 == "":
-                            koniec = 1
+                            end = 1
                             break
                         if bu2[len(bu2) - 1] == '\n':
                             bufor += bu2
                             break
                         bufor += bu2
                     tab = findall("(.*?\n)", bufor)
-                    for linia in tab:
-                        if lkodowanie == 1:
-                            linia = linia.replace('\xa1', '\xa5')
-                            linia = linia.replace('\xb1', '\xb9')
-                            linia = linia.replace('\xa6', '\x8c')
-                            linia = linia.replace('\xb6', '\x9c')
-                            linia = linia.replace('\xac', '\x8f')
-                            linia = linia.replace('\xbc', '\x9f')
-                        if lkodowanie == 2:
-                            linia = linia.replace("\xa1", "\xc4\x84")
-                            linia = linia.replace("\xc6", "\xc4\x86")
-                            linia = linia.replace("\xca", "\xc4\x98")
-                            linia = linia.replace("\xa3", "\xc5\x81")
-                            linia = linia.replace("\xd1", "\xc5\x83")
-                            linia = linia.replace("\xd3", "\xc3\x93")
-                            linia = linia.replace("\xa6", "\xc5\x9a")
-                            linia = linia.replace("\xac", "\xc5\xb9")
-                            linia = linia.replace("\xaf", "\xc5\xbb")
-                            linia = linia.replace("\xb1", "\xc4\x85")
-                            linia = linia.replace("\xe6", "\xc4\x87")
-                            linia = linia.replace("\xea", "\xc4\x99")
-                            linia = linia.replace("\xb3", "\xc5\x82")
-                            linia = linia.replace("\xf1", "\xc5\x84")
-                            linia = linia.replace("\xf3", "\xc3\xb3")
-                            linia = linia.replace("\xb6", "\xc5\x9b")
-                            linia = linia.replace("\xbc", "\xc5\xba")
-                            linia = linia.replace("\xbf", "\xc5\xbc")
+                    for line in tab:
+                        if encode == 1:
+                            line = line.replace('\xa1', '\xa5')
+                            line = line.replace('\xb1', '\xb9')
+                            line = line.replace('\xa6', '\x8c')
+                            line = line.replace('\xb6', '\x9c')
+                            line = line.replace('\xac', '\x8f')
+                            line = line.replace('\xbc', '\x9f')
+                        if encode == 2:
+                            line = line.replace("\xa1", "\xc4\x84")
+                            line = line.replace("\xc6", "\xc4\x86")
+                            line = line.replace("\xca", "\xc4\x98")
+                            line = line.replace("\xa3", "\xc5\x81")
+                            line = line.replace("\xd1", "\xc5\x83")
+                            line = line.replace("\xd3", "\xc3\x93")
+                            line = line.replace("\xa6", "\xc5\x9a")
+                            line = line.replace("\xac", "\xc5\xb9")
+                            line = line.replace("\xaf", "\xc5\xbb")
+                            line = line.replace("\xb1", "\xc4\x85")
+                            line = line.replace("\xe6", "\xc4\x87")
+                            line = line.replace("\xea", "\xc4\x99")
+                            line = line.replace("\xb3", "\xc5\x82")
+                            line = line.replace("\xf1", "\xc5\x84")
+                            line = line.replace("\xf3", "\xc3\xb3")
+                            line = line.replace("\xb6", "\xc5\x9b")
+                            line = line.replace("\xbc", "\xc5\xba")
+                            line = line.replace("\xbf", "\xc5\xbc")
                         if lkolor == 1:
-                            linia = linia.replace("%C959595%", '\x03' + "14")
-                            linia = linia.replace("%C990033%", '\x03' + "05")
-                            linia = linia.replace("%Cc86c00%", '\x03' + "07")
-                            linia = linia.replace("%C623c00%", '\x03' + "05")
-                            linia = linia.replace("%Cce00ff%", '\x03' + "13")
-                            linia = linia.replace("%Ce40f0f%", '\x03' + "04")
-                            linia = linia.replace("%C3030ce%", '\x03' + "12")
-                            linia = linia.replace("%C008100%", '\x03' + "03")
-                            linia = linia.replace("%C1a866e%", '\x03' + "10")
-                            linia = linia.replace("%C006699%", '\x03' + "11")
-                            linia = linia.replace("%C8800ab%", '\x03' + "06")
-                            linia = linia.replace("%C0f2ab1%", '\x03' + "02")
-                            linia = linia.replace("%Cff6500%", '\x03' + "07")
-                            linia = linia.replace("%Cff0000%", '\x03' + "04")
+                            line = line.replace("%C959595%", '\x03' + "14")
+                            line = line.replace("%C990033%", '\x03' + "05")
+                            line = line.replace("%Cc86c00%", '\x03' + "07")
+                            line = line.replace("%C623c00%", '\x03' + "05")
+                            line = line.replace("%Cce00ff%", '\x03' + "13")
+                            line = line.replace("%Ce40f0f%", '\x03' + "04")
+                            line = line.replace("%C3030ce%", '\x03' + "12")
+                            line = line.replace("%C008100%", '\x03' + "03")
+                            line = line.replace("%C1a866e%", '\x03' + "10")
+                            line = line.replace("%C006699%", '\x03' + "11")
+                            line = line.replace("%C8800ab%", '\x03' + "06")
+                            line = line.replace("%C0f2ab1%", '\x03' + "02")
+                            line = line.replace("%Cff6500%", '\x03' + "07")
+                            line = line.replace("%Cff0000%", '\x03' + "04")
                         if lbold == 1:
-                            linia = sub("%Fb.*?%", '\x02', linia)
-                        linia = sub("%C[a-fA-F0-9]{6}%", '', linia)
-                        linia = linia.replace("%C%", '')
-                        linia = sub("%F.?.?:[a-z]+%", '', linia)
-                        linia = sub("%F[bi]{0,2}%", '', linia)
+                            line = sub("%Fb.*?%", '\x02', line)
+                        line = sub("%C[a-fA-F0-9]{6}%", '', line)
+                        line = line.replace("%C%", '')
+                        line = sub("%F.?.?:[a-z]+%", '', line)
+                        line = sub("%F[bi]{0,2}%", '', line)
                         if lemoty == 1:
-                            tmpb = linia.split(' ')
+                            tmpb = line.split(' ')
                             if tmpb[1] != "353":
-                                b = findall("(%I(.+?)%)", linia)
+                                b = findall("(%I(.+?)%)", line)
                                 for c in b:
-                                    linia = linia.replace(c[0], "<" + c[1] + ">")
+                                    line = line.replace(c[0], "<" + c[1] + ">")
                         elif lemoty == 2:
-                            tmpb = linia.split(' ')
+                            tmpb = line.split(' ')
                             if tmpb[1] != "353":
-                                b = findall("(%I(.+?)%)", linia)
+                                b = findall("(%I(.+?)%)", line)
                                 for c in b:
-                                    linia = linia.replace(c[0], "//" + c[1])
+                                    line = line.replace(c[0], "//" + c[1])
                         try:
-                            tmpb = linia.split(' ')
+                            tmpb = line.split(' ')
                             if tmpb[1] == "PRIVMSG":
                                 if tmpb[2][0] == '^':
                                     tmpb[2] = tmpb[2].replace('^', '#^')
-                                    linia = ' '.join(tmpb)
+                                    line = ' '.join(tmpb)
 
                             elif tmpb[1] == "MODERMSG":
-                                linia = "%s PRIVMSG %s :MODERMSG %s: %s" % (
+                                line = "%s PRIVMSG %s :MODERMSG %s: %s" % (
                                 tmpb[0], tmpb[4], tmpb[2], ' '.join(tmpb[5:])[1:])
                             elif tmpb[1] == "MODERNOTICE":
-                                linia = "%s PRIVMSG %s :MODERNOTICE: %s" % (tmpb[0], tmpb[2], ' '.join(tmpb[3:])[1:])
+                                line = "%s PRIVMSG %s :MODERNOTICE: %s" % (tmpb[0], tmpb[2], ' '.join(tmpb[3:])[1:])
 
 
 
                             elif tmpb[1] == "JOIN":
                                 if tmpb[2][0] == '^':
-                                    linia = linia.replace('^', '#^')
+                                    line = line.replace('^', '#^')
                                 elif tmpb[3][:2] == ':W':
                                     tmpb[3] = sub(",[0-3]\r\n", '', tmpb[3])
                                     if tmpb[3][:3] == ":Wr":
-                                        linia = tmpb[3].replace(":Wrx", tmpb[0] + " " + tmpb[1] + " " + tmpb[
+                                        line = tmpb[3].replace(":Wrx", tmpb[0] + " " + tmpb[1] + " " + tmpb[
                                             2] + "\r\n:WebcamServ!service@service.onet MODE " + tmpb[2] + " +Cam " +
                                                                 tmpb[0][1:].split('!')[0] + "\r\n")
                                     elif tmpb[3][:4] == ":Wbr":
-                                        linia = tmpb[3].replace(":Wbrx", tmpb[0] + " " + tmpb[1] + " " + tmpb[
+                                        line = tmpb[3].replace(":Wbrx", tmpb[0] + " " + tmpb[1] + " " + tmpb[
                                             2] + "\r\n:WebcamServ!service@service.onet MODE " + tmpb[2] + " +Cam " +
                                                                 tmpb[0][1:].split('!')[0] + "\r\n")
                             elif tmpb[1] == "MODE":
                                 if tmpb[3][:2] == "+W":
-                                    linia = tmpb[0] + " 2010 :CAM " + tmpb[2] + " on\r\n"
+                                    line = tmpb[0] + " 2010 :CAM " + tmpb[2] + " on\r\n"
                                 elif tmpb[3][:2] == "-W":
-                                    linia = tmpb[0] + " 2010 :CAM " + tmpb[2] + " off\r\n"
+                                    line = tmpb[0] + " 2010 :CAM " + tmpb[2] + " off\r\n"
                             elif tmpb[1] == "353":
                                 if tmpb[4][0] == '^':
                                     tmpb[4] = tmpb[4].replace('^', '#^')
-                                    linia = ' '.join(tmpb)
-                                if linia.find('|') != -1:
+                                    line = ' '.join(tmpb)
+                                if line.find('|') != -1:
                                     tmpstr = ""
-                                    a1 = linia.split(':')
+                                    a1 = line.split(':')
                                     a1[2] = a1[2].replace("\r\n", "")
                                     ta1 = a1[2].split(' ')
                                     for aa1 in ta1:
@@ -618,55 +618,55 @@ def jedziesz(sock, ID):
                                         else:
                                             tmpstr += xx[0] + " "
                                     a1[2] = tmpstr
-                                    linia = ':'.join(a1) + "\r\n"
+                                    line = ':'.join(a1) + "\r\n"
                             elif tmpb[1] == "366":
                                 if tmpb[3][0] == '^':
                                     tmpb[3] = tmpb[3].replace('^', '#^')
-                                    linia = ' '.join(tmpb)
+                                    line = ' '.join(tmpb)
                             elif tmpb[1] == "341":
                                 if tmpb[4][0] == '^':
                                     tmpb[4] = tmpb[4].replace('^', '#^')
-                                    linia = ' '.join(tmpb)
+                                    line = ' '.join(tmpb)
                             elif tmpb[1] == "NOTICE":
                                 if tmpb[2][0] == '^':
                                     tmpb[2] = tmpb[2].replace('^', '#^')
-                                    linia = ' '.join(tmpb)
+                                    line = ' '.join(tmpb)
                             elif tmpb[1] == "PART":
                                 if tmpb[2][0] == '^':
                                     tmpb[2] = tmpb[2].replace('^', '#^')
-                                    linia = ' '.join(tmpb)
+                                    line = ' '.join(tmpb)
                             elif tmpb[1] == "INVITE":
                                 if tmpb[3][1] == '^':
                                     tmpb[3] = tmpb[3].replace('^', '#^')
-                                    linia = ' '.join(tmpb)
+                                    line = ' '.join(tmpb)
                             elif tmpb[1] == "817":
-                                linia = ":_-_!name@host.org PRIVMSG %s :%s <%s> %s" % (
-                                tmpb[3], czas(tmpb[4]), tmpb[5], ' '.join(tmpb[7:]))
+                                line = ":_-_!name@host.org PRIVMSG %s :%s <%s> %s" % (
+                                    tmpb[3], time(tmpb[4]), tmpb[5], ' '.join(tmpb[7:]))
                             elif tmpb[1] == "819":
                                 onethost = tmpb[0]
-                                tab3 = findall("(#.+?):.:(\d+)", linia)
+                                tab3 = findall("(#.+?):.:(\d+)", line)
                                 for room in tab3:
                                     send(sock, "%s 322 %s %s %s :\r\n" % (onethost, nickname, room[0], room[1]))
-                                linia = ""
+                                line = ""
                             elif tmpb[1] == "820":
-                                linia = "%s 323 %s :End of LIST\r\n" % (tmpb[0], nickname)
+                                line = "%s 323 %s :End of LIST\r\n" % (tmpb[0], nickname)
                             elif tmpb[1] == "421":
-                                linia = linia.replace(" MODE :This command has been disabled.", '')
-                                linia = linia.replace(" SETS :Unknown command", '')
-                                linia = linia.replace(" CAM :Unknown command", '')
-                                linia = linia.replace(" UO :Unknown command", '')
+                                line = line.replace(" MODE :This command has been disabled.", '')
+                                line = line.replace(" SETS :Unknown command", '')
+                                line = line.replace(" CAM :Unknown command", '')
+                                line = line.replace(" UO :Unknown command", '')
                             elif tmpb[1] == "005":
-                                linia = linia.replace(" PREFIX=(qaohXYv)`&@%!=+ ", ' PREFIX=(CqaohXv)=`&@%!+ ')
+                                line = line.replace(" PREFIX=(qaohXYv)`&@%!=+ ", ' PREFIX=(CqaohXv)=`&@%!+ ')
                         except:
                             pass
-                        if linia != "":
-                            send(sock, linia)
+                        if line != "":
+                            send(sock, line)
                 except:
-                    dawaj_date()
+                    get_date()
                     print("[%3d] nick: %s = blad odczytu/zapisu z/do gniazda", (ID, nickname))
-                    koniec = 1
+                    end = 1
                     break
-        if koniec == 1:
+        if end == 1:
             sock.close()
             onet.close()
             break
@@ -676,11 +676,11 @@ s = socket(AF_INET, SOCK_STREAM)
 try:
     s.bind(('', BindPort))
 except:
-    dawaj_date()
+    get_date()
     print("ERROR: nie mozna zabindowac portu %s, wybierz inny BindPort")
     s.close()
     sys.exit()
-dawaj_date()
+get_date()
 if local_ip != '':
     print("server:  + $local_ip + $BindPort")
 else:
@@ -689,10 +689,10 @@ s.listen(5)
 cID = 1
 while 1:
     c, cinfo = s.accept()
-    dawaj_date()
+    get_date()
     sys.stdout.write("[%3d] %s:%s = " % ((cID,) + cinfo))
 
-    threading.Thread(target=jedziesz,
+    threading.Thread(target=mainLoop,
                      args=(c, cID)
                      ).start()
     cID = cID + 1

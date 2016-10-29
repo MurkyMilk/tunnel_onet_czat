@@ -51,3 +51,14 @@ def applyEncoding(bufor, encode, lemoty):
         for c in b:
             bufor = bufor.replace(c[0], "%I" + c[1] + "%")
     return bufor
+
+
+def get_proper_encoding(bufor, encode):
+    if bufor.find("NOTICE") != -1 and bufor.find("VERSION") != -1:
+        if bufor.find("mIRC v6") != -1:
+            encode = 1
+        elif bufor.find("mIRC v7") != -1:
+            encode = 2
+        else:
+            encode = 0
+    return encode

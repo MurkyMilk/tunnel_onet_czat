@@ -2,17 +2,17 @@
 
 ############### CONFIG ###############
 import select
+import sys
 import threading
 from re import findall
 from socket import *
-import sys
 
 from auth import auth, authorization
 from connection import createSocketConnection, create_socket
-from encoding import applyEncoding
+from encoding import applyEncoding, get_proper_encoding
 from fromClientParser import process_message_from_client
 from fromOnetParser import parse_and_send_incomining_message
-from util import send, get_date_string
+from util import send, get_date_string, recv
 from welcome_information import send_welcome_messages, printWelcomeInfo
 
 color = 0  # obsluga kolorow, 0 aby wylaczyc;
@@ -48,30 +48,31 @@ def worker(sock):
 
     send_welcome_messages(lbold, lkolor, sock)
 
-    if TUNEL_PASS:
-        password = password.split(':')
-        if len(password) != 2:
-            wrong_password_parsing(sock)
-            sock.close()
-            return
-        if password[0] != TUNEL_PASS:
-            inform_wrong_tunnel_password(sock)
-            sock.close()
-            return
-        password = password[1]
-    sys.stdout.write("nick: %s\n" % nickname)
     try:
-
+        checkTunnelPassword(password)
+        password = extractPassword(password)
         UOkey = authorization(nickname, password)
     except Exception as e:
         print(e)
-        sock.send(str.encode("ERROR: sprawdz swoje polaczenie sieciowe z internetem, poprawnosc wprowadzonego hasla i nicka lub dostepnosc serwerow onet.pl"))
         sock.close()
         return
 
     sockets = [sock]
     onet = connect_to_onet(UOkey, nickname, sock, sockets)
     mainLoop(UOkey, encode, end, lbold, lemoty, lkolor, nickname, onet, sock, sockets)
+
+
+def extractPassword(password):
+    if TUNEL_PASS:
+        password = password.split(':')
+        if len(password) != 2:
+            raise Exception("wrong password parsing!")
+        password = password[1]
+    return password
+
+def checkTunnelPassword(password):
+    if TUNEL_PASS and password[0] != TUNEL_PASS:
+        raise Exception("wrong password for tunnel!")
 
 
 def extract_password(whole_message):
@@ -97,12 +98,12 @@ def connect_to_onet(UOkey, nickname, sock, sockets):
     sockets.append(onet)
     onet.bind((local_ip, 0))
     onet.connect(("czat-app.onet.pl", 5015))
-    sock.send(onet.recv(1024))
-    onet.send(str.encode("AUTHKEY\r\n"))
-    onet.send(str.encode("NICK " + nickname + "\r\n"))
-    onet.send(str.encode("USER * " + UOkey + " czat-app.onet.pl :" + nickname + "\r\n"))
-    authkey = auth(findall(":.*?801.*?:(.*?)\r", onet.recv(1024).decode("utf-8", "ignore"))[0])
-    onet.send(str.encode("AUTHKEY " + authkey + "\r\n"))
+    send(sock, recv(onet, 1024))
+    send(onet, "AUTHKEY\r\n")
+    send(onet, "NICK " + nickname + "\r\n")
+    send(onet, ("USER * " + UOkey + " czat-app.onet.pl :" + nickname + "\r\n"))
+    authkey = auth(findall(":.*?801.*?:(.*?)\r", recv(onet, 1024))[0])
+    send(onet, "AUTHKEY " + authkey + "\r\n")
     return onet
 
 
@@ -116,7 +117,7 @@ def mainLoop(UOkey, encode, end, lbold, lemoty, lkolor, nickname, onet, sock, so
                     if bufor == "":
                         end = 1
                         break
-                    encode = set_proper_encoding(bufor, encode, sock)
+                    encode = get_proper_encoding(bufor, encode)
                     bufor = applyEncoding(bufor, encode, lemoty)
                     tmpb = bufor.split(' ')
                     encode, lbold, lemoty, lkolor = process_message_from_client(UOkey, bufor, encode, lbold, lemoty,
@@ -149,20 +150,6 @@ def mainLoop(UOkey, encode, end, lbold, lemoty, lkolor, nickname, onet, sock, so
             sock.close()
             onet.close()
             break
-
-
-def set_proper_encoding(bufor, encode, sock):
-    if bufor.find("NOTICE") != -1 and bufor.find("VERSION") != -1:
-        if bufor.find("mIRC v6") != -1:
-            encode = 1
-        elif bufor.find("mIRC v7") != -1:
-            encode = 2
-        else:
-            encode = 0
-        sock.send(
-            ":fake.host 666 nik : 10[Tunel] ustawiono typ kodowania:5                %d\r\n" % (
-                encode))
-    return encode
 
 
 ##HERE COMES THE DRAGONS

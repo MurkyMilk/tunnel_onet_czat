@@ -1,42 +1,44 @@
 from util import send
 
 
-def transform_message_from_client(UOkey, bufor, config , onet, sock, tmpb):
-    if tmpb[0] == "PRIVMSG":
-        if tmpb[1][0:2] == '#^':
-            tmpb[1] = tmpb[1].replace('#^', '^')
-            bufor = ' '.join(tmpb)
-    elif (tmpb[0] == "JOIN") and (tmpb[1][0:2] == '#^'):
-        tmpb[1] = tmpb[1].replace('#^', '^')
-        bufor = ' '.join(tmpb)
-    elif (tmpb[0] == "PART") and (tmpb[1][0:2] == '#^'):
-        tmpb[1] = tmpb[1].replace('#^', '^')
-        bufor = ' '.join(tmpb)
-    elif (tmpb[0] == "INVITE") and (tmpb[2][0:2] == '#^'):
-        tmpb[2] = tmpb[2].replace('#^', '^')
-        bufor = ' '.join(tmpb)
-    elif tmpb[0][:2] == "UO":
+def handleMessageFromClient(UOkey, received_message, config, onet, sock):
+    print("INSIDE CLIENT HANDLER: " +received_message )
+    splitted_msg = received_message.split(' ')
+    if splitted_msg[0] == "PRIVMSG":
+        if splitted_msg[1][0:2] == '#^':
+            splitted_msg[1] = splitted_msg[1].replace('#^', '^')
+            received_message = ' '.join(splitted_msg)
+    elif (splitted_msg[0] == "JOIN") and (splitted_msg[1][0:2] == '#^'):
+        splitted_msg[1] = splitted_msg[1].replace('#^', '^')
+        received_message = ' '.join(splitted_msg)
+    elif (splitted_msg[0] == "PART") and (splitted_msg[1][0:2] == '#^'):
+        splitted_msg[1] = splitted_msg[1].replace('#^', '^')
+        received_message = ' '.join(splitted_msg)
+    elif (splitted_msg[0] == "INVITE") and (splitted_msg[2][0:2] == '#^'):
+        splitted_msg[2] = splitted_msg[2].replace('#^', '^')
+        received_message = ' '.join(splitted_msg)
+    elif splitted_msg[0][:2] == "UO":
         send(sock, ":fake.host 2012 " + config['nickname'] + " : 10[Tunel] Twoj UOkey: " + UOkey + "\r\n")
-    elif tmpb[0][:4] == "SETS":
+    elif splitted_msg[0][:4] == "SETS":
         try:
-            if tmpb[1] == "kolor":
+            if splitted_msg[1] == "kolor":
                 try:
-                    config['lkolor'] = int(tmpb[2][0])
+                    config['lkolor'] = int(splitted_msg[2][0])
                 except:
                     send(sock, "onettunel.py - dozwolone wartosci: 2, 1 i 0\r\n")
-            elif tmpb[1] == "kodowanie":
+            elif splitted_msg[1] == "kodowanie":
                 try:
-                    config['encode'] = int(tmpb[2][0])
+                    config['encode'] = int(splitted_msg[2][0])
                 except:
                     send(sock, "onettunel.py - dozwolone wartosci: 1 i 0\r\n")
-            elif tmpb[1] == "bold":
+            elif splitted_msg[1] == "bold":
                 try:
-                    config['lbold'] = int(tmpb[2][0])
+                    config['lbold'] = int(splitted_msg[2][0])
                 except:
                     send(sock, "onettunel.py - dozwolone wartosci: 1 i 0\r\n")
-            elif tmpb[1] == "emoty":
+            elif splitted_msg[1] == "emoty":
                 try:
-                    config['lemoty'] = int(tmpb[2][0])
+                    config['lemoty'] = int(splitted_msg[2][0])
                 except:
                     send(sock, "onettunel.py - dozwolone wartosci: 2, 1 i 0\r\n")
         except:
@@ -47,15 +49,15 @@ def transform_message_from_client(UOkey, bufor, config , onet, sock, tmpb):
                         ":fake.host 666 nik : 10[Tunel]  bold:5      %d\r\n"
                         ":fake.host 666 nik : 10[Tunel]  emoty:5     %d\r\n") % (
                 config['lkolor'], config['encode'], config['lbold'], config['lemoty']))
-    elif tmpb[0] == "LIST":
-        bufor = "SLIST\r\n"
-    elif tmpb[0] == "PROTOCTL":
-        bufor = bufor.replace("NAMESX", "ONETNAMESX")
-    elif tmpb[0] == "CAM":
-        if tmpb[3][:2] == "on":
-            cammsg = ":WebcamServ!service@service.onet MODE " + tmpb[2] + " +Cam " + tmpb[1] + "\r\n"
-        if tmpb[3][:3] == "off":
-            cammsg = ":WebcamServ!service@service.onet MODE " + tmpb[2] + " -Cam " + tmpb[1] + "\r\n"
+    elif splitted_msg[0] == "LIST":
+        received_message = "SLIST\r\n"
+    elif splitted_msg[0] == "PROTOCTL":
+        received_message = received_message.replace("NAMESX", "ONETNAMESX")
+    elif splitted_msg[0] == "CAM":
+        if splitted_msg[3][:2] == "on":
+            cammsg = ":WebcamServ!service@service.onet MODE " + splitted_msg[2] + " +Cam " + splitted_msg[1] + "\r\n"
+        if splitted_msg[3][:3] == "off":
+            cammsg = ":WebcamServ!service@service.onet MODE " + splitted_msg[2] + " -Cam " + splitted_msg[1] + "\r\n"
         if config['encode'] == 1:
             cammsg = cammsg.replace('\xa1', '\xa5')
             cammsg = cammsg.replace('\xb1', '\xb9')
@@ -83,5 +85,5 @@ def transform_message_from_client(UOkey, bufor, config , onet, sock, tmpb):
             cammsg = cammsg.replace("\xbc", "\xc5\xba")
             cammsg = cammsg.replace("\xbf", "\xc5\xbc")
             send(sock, cammsg)
-    send(onet, bufor)
+    send(onet, received_message)
     return config

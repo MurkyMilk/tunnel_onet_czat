@@ -4,9 +4,12 @@ from re import sub, findall
 
 
 
-def tranform_message_from_onet(config, sock, splitted_msg):
+def handleMessageFromOnet(config, sock, msg):
     from util import send
-    for line in splitted_msg:
+    print("INSIDE ONET HANDLER: " + msg)
+    seperated = findall("(.*?\n)", msg)
+    for line in seperated:
+        print("SEPARETED: " + line)
         if  config['encode'] == 1:
             line = applyEncoding1(line)
         if  config['encode'] == 2:

@@ -6,10 +6,8 @@ from re import sub, findall
 
 def handleMessageFromOnet(config, sock, msg):
     from util import send
-    print("INSIDE ONET HANDLER: " + msg)
     seperated = findall("(.*?\n)", msg)
     for line in seperated:
-        print("SEPARETED: " + line)
         if  config['encode'] == 1:
             line = applyEncoding1(line)
         if  config['encode'] == 2:

@@ -1,8 +1,7 @@
 from util import send
 
 
-def handleMessageFromClient(UOkey, received_message, config, onet, sock):
-    print("INSIDE CLIENT HANDLER: " +received_message )
+def handleMessageFromClient(received_message, config, onet_socket, client_socket):
     splitted_msg = received_message.split(' ')
     if splitted_msg[0] == "PRIVMSG":
         if splitted_msg[1][0:2] == '#^':
@@ -18,32 +17,32 @@ def handleMessageFromClient(UOkey, received_message, config, onet, sock):
         splitted_msg[2] = splitted_msg[2].replace('#^', '^')
         received_message = ' '.join(splitted_msg)
     elif splitted_msg[0][:2] == "UO":
-        send(sock, ":fake.host 2012 " + config['nickname'] + " : 10[Tunel] Twoj UOkey: " + UOkey + "\r\n")
+        pass
     elif splitted_msg[0][:4] == "SETS":
         try:
             if splitted_msg[1] == "kolor":
                 try:
                     config['lkolor'] = int(splitted_msg[2][0])
                 except:
-                    send(sock, "onettunel.py - dozwolone wartosci: 2, 1 i 0\r\n")
+                    send(client_socket, "onettunel.py - dozwolone wartosci: 2, 1 i 0\r\n")
             elif splitted_msg[1] == "kodowanie":
                 try:
                     config['encode'] = int(splitted_msg[2][0])
                 except:
-                    send(sock, "onettunel.py - dozwolone wartosci: 1 i 0\r\n")
+                    send(client_socket, "onettunel.py - dozwolone wartosci: 1 i 0\r\n")
             elif splitted_msg[1] == "bold":
                 try:
                     config['lbold'] = int(splitted_msg[2][0])
                 except:
-                    send(sock, "onettunel.py - dozwolone wartosci: 1 i 0\r\n")
+                    send(client_socket, "onettunel.py - dozwolone wartosci: 1 i 0\r\n")
             elif splitted_msg[1] == "emoty":
                 try:
                     config['lemoty'] = int(splitted_msg[2][0])
                 except:
-                    send(sock, "onettunel.py - dozwolone wartosci: 2, 1 i 0\r\n")
+                    send(client_socket, "onettunel.py - dozwolone wartosci: 2, 1 i 0\r\n")
         except:
             pass
-            send(sock, (":fake.host 666 nik : 10[Tunel] ustawienia polaczenia:\r\n"
+            send(client_socket, (":fake.host 666 nik : 10[Tunel] ustawienia polaczenia:\r\n"
                         ":fake.host 666 nik : 10[Tunel]  kolor:5     %d\r\n"
                         ":fake.host 666 nik : 10[Tunel]  kodowanie:5 %d\r\n"
                         ":fake.host 666 nik : 10[Tunel]  bold:5      %d\r\n"
@@ -84,6 +83,6 @@ def handleMessageFromClient(UOkey, received_message, config, onet, sock):
             cammsg = cammsg.replace("\xb6", "\xc5\x9b")
             cammsg = cammsg.replace("\xbc", "\xc5\xba")
             cammsg = cammsg.replace("\xbf", "\xc5\xbc")
-            send(sock, cammsg)
-    send(onet, received_message)
+            send(client_socket, cammsg)
+    send(onet_socket, received_message)
     return config

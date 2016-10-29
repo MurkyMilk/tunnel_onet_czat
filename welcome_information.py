@@ -22,11 +22,8 @@ def send_welcome_messages(lbold, lkolor, sock):
 
 
 def printWelcomeInfo(color, bold, encoding):
-    global realname
     print("onettunel.py v.2010-04 / by Olo (2008-2010) unix.onlinewebshop.net")
     print("poprawki Husar, 08-07-2011\r\n\r\n")
-    if realname == "":
-        realname = ""
     if color == 1:
         print("Wlaczona obsluga kolorow")
     else:

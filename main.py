@@ -1,13 +1,18 @@
 #!/usr/bin/env python
 
 ############### CONFIG ###############
+import select
 import threading
+from re import findall
+from socket import *
+import sys
 
 from auth import auth, authorization
+from connection import createSocketConnection, create_socket
 from encoding import applyEncoding
 from fromClientParser import process_message_from_client
 from fromOnetParser import parse_and_send_incomining_message
-from util import send
+from util import send, get_date_string
 from welcome_information import send_welcome_messages, printWelcomeInfo
 
 color = 0  # obsluga kolorow, 0 aby wylaczyc;
@@ -21,34 +26,6 @@ port = 6601  # port, bez ""
 realname = "Mlecko"  # nazwa
 
 ######################################
-
-
-from socket import *
-from re import findall
-from time import ctime
-import select
-
-import sys
-
-wersja = sys.version[0] + sys.version[2]
-if wersja <= "":
-    pass
-else:
-    pass
-
-
-def get_date_string():
-    return "[%s] = " % ctime()
-
-
-def time(cz):
-    a = ""
-    try:
-        a = [x for x in ctime(int(cz)).split(' ') if x.find(':') != -1][0]
-    except:
-        a = cz
-    return a
-
 
 def init(sock, ID):
     bufor = ""
@@ -195,42 +172,10 @@ def set_proper_encoding(bufor, encode, sock):
 
 
 
-def getBindPort():
-    global BindPort
-    if len(sys.argv) == 2:
-        BindPort = int(sys.argv[1])
-    else:
-        BindPort = port
-
-def bindSocket(s):
-    try:
-        s.bind(('', BindPort))
-        get_date_string()
-        if local_ip != '':
-            print("server:  + $local_ip + $BindPort")
-        else:
-            print("server:" + str(gethostbyname(gethostname())) + str(BindPort))
-    except Exception as e:
-        print(e)
-        get_date_string()
-        print("ERROR: nie mozna zabindowac portu %s, wybierz inny BindPort")
-        s.close()
-        sys.exit()
-
-def createSocketConnection(s):
-    getBindPort()
-    bindSocket(s)
-
-
-def create_socket():
-    return socket(AF_INET, SOCK_STREAM)
-
-
 global s
 s = create_socket()
-
 printWelcomeInfo(color, bold, encoding)
-createSocketConnection(s)
+createSocketConnection(s, port, local_ip)
 s.listen(5)
 cID = 1
 while 1:

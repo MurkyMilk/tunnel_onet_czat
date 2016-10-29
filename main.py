@@ -8,7 +8,7 @@ from re import findall
 from socket import *
 
 from auth import auth, authorization
-from connection import createSocketConnection, create_socket
+from connection import createSocketConnection, create_client_socket
 from encoding import applyEncoding, get_proper_encoding
 from fromClientMsgHandler import handleMessageFromClient
 from fromOnetMsgHandler import handleMessageFromOnet
@@ -27,7 +27,7 @@ realname = "Mlecko"  # nazwa
 
 ######################################
 
-def worker(sock):
+def worker(client_socket):
     whole_message = ""
     config = {'nickname': "",
               'password': "",
@@ -38,29 +38,27 @@ def worker(sock):
               }
 
     while (config['password'] == "") or (config['nickname'] == ""):
-        received_chunk = sock.recv(1024)
+        received_chunk = client_socket.recv(1024)
         if received_chunk == "": return
         whole_message += received_chunk.decode()
         if not whole_message.find("NICK") == -1:
-            config['nickname'] = extract_nick(whole_message)
+            config['nickname'] = get_nick(whole_message)
         if not whole_message.find("PASS") == -1:
-            config['password'] = extract_password(whole_message)
+            config['password'] = get_password(whole_message)
 
-    send_welcome_messages(config, sock)
+    send_welcome_messages(config, client_socket)
 
     try:
-        print(config['password'])
         checkTunnelPassword(config['password'])
         config['password'] = extractPassword(config['password'])
-        UOkey = authorization(config['nickname'], config['password'])
+        config['UOkey'] = authorization(config['nickname'], config['password'])
     except Exception as e:
         print(e)
-        sock.close()
+        client_socket.close()
         return
 
-    sockets = [sock]
-    onet = connect_to_onet(UOkey,  config['nickname'], sock, sockets)
-    mainLoop(UOkey, config,onet, sock, sockets)
+    onet = connect_to_onet(config['UOkey'], config['nickname'], client_socket)
+    mainLoop(config, onet, client_socket)
 
 
 def extractPassword(password):
@@ -76,19 +74,18 @@ def checkTunnelPassword(password):
         raise Exception("wrong password for tunnel!")
 
 
-def extract_password(whole_message):
+def get_password(whole_message):
     password = findall("PASS (.*?)(\r|\n)", whole_message)[0][0]
     return password
 
 
-def extract_nick(whole_message):
+def get_nick(whole_message):
     nickname = findall("NICK (.*?)(\r|\n)", whole_message)[0][0]
     return nickname
 
 
-def connect_to_onet(UOkey, nickname, sock, sockets):
+def connect_to_onet(UOkey, nickname, sock):
     onet = socket(AF_INET, SOCK_STREAM)
-    sockets.append(onet)
     onet.bind((local_ip, 0))
     onet.connect(("czat-app.onet.pl", 5015))
     send(sock, recv(onet, 1024))
@@ -100,9 +97,9 @@ def connect_to_onet(UOkey, nickname, sock, sockets):
     return onet
 
 
-def mainLoop(UOkey, config, onet_socket, client_socket, sockets):
+def mainLoop(config, onet_socket, client_socket):
     while 1:
-        (sockets_with_ready_messages, dw, de) = select.select(sockets, [], [])
+        (sockets_with_ready_messages, dw, de) = select.select([client_socket, onet_socket], [], [])
         for socket_with_ready_msg in sockets_with_ready_messages:
             if socket_with_ready_msg == client_socket:
                 print("RECEIVED FROM CLIENT")
@@ -111,7 +108,7 @@ def mainLoop(UOkey, config, onet_socket, client_socket, sockets):
                     if received_message:
                         config['encode'] = get_proper_encoding(received_message, config['encode'])
                         received_message = applyEncoding(received_message, config['encode'], config['lemoty'])
-                        config = handleMessageFromClient(UOkey, received_message, config, onet_socket, client_socket)
+                        config = handleMessageFromClient(config['UOkey'], received_message, config, onet_socket, client_socket)
                     else:
                         client_socket.close()
                         onet_socket.close()
@@ -144,12 +141,13 @@ def mainLoop(UOkey, config, onet_socket, client_socket, sockets):
 
 ##HERE COMES THE DRAGONS
 
-global s
-s = create_socket()
+client_socket = create_client_socket()
+
 printWelcomeInfo(color, bold, encoding)
-createSocketConnection(s, port, local_ip)
-s.listen(5)
+
+createSocketConnection(client_socket, port, local_ip)
+client_socket.listen(5)
 while 1:
-    c, cinfo = s.accept()
-    threading.Thread(target=worker, args=[c]).start()
-s.close()
+    socket_accepted, cinfo = client_socket.accept()
+    threading.Thread(target=worker, args=[socket_accepted]).start()
+client_socket.close()

@@ -32,5 +32,5 @@ def createSocketConnection(s,port, local_ip):
     bindSocket(s, getBindPort(sys.argv, port), local_ip)
 
 
-def create_socket():
+def create_client_socket():
     return socket(AF_INET, SOCK_STREAM)

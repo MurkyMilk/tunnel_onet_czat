@@ -27,7 +27,7 @@ realname = "Mlecko"  # nazwa
 
 ######################################
 
-def init(sock, ID):
+def init(sock):
     bufor = ""
     end = 0
     nickname = ""
@@ -55,9 +55,9 @@ def init(sock, ID):
     if not TUNEL_PASS == "":
         password = password.split(':')
         if not len(password) == 2:
-            return wrong_password_parsing(ID, nickname, password, sock)
+            return wrong_password_parsing(sock)
         if not password[0] == TUNEL_PASS:
-            return inform_wrong_tunnel_password(ID, nickname, password, sock)
+            return inform_wrong_tunnel_password(sock)
         password = password[1]
     sys.stdout.write("nick: %s\n" % nickname)
     try:
@@ -77,18 +77,16 @@ def init(sock, ID):
         return
     sockets = [sock]
     onet = connect_to_onet(UOkey, nickname, sock, sockets)
-    mainLoop(ID, UOkey, encode, end, lbold, lemoty, lkolor, nickname, onet, sock, sockets)
+    mainLoop(UOkey, encode, end, lbold, lemoty, lkolor, nickname, onet, sock, sockets)
 
 
-def wrong_password_parsing(ID, nickname, password, sock):
-    sys.stdout.write("[%3d]nick: %s :: pass: %s\n" % (ID, nickname, ':'.join(password)))
+def wrong_password_parsing(sock):
     send(sock, "uzywaj: /server host port haslo_do_tunel:haslo_do_nick\r\n")
     sock.close()
     return
 
 
-def inform_wrong_tunnel_password(ID, nickname, password, sock):
-    sys.stdout.write("[%3d]nick: %s :: pass: %s\n" % (ID, nickname, ':'.join(password)))
+def inform_wrong_tunnel_password(sock):
     send(sock, "zle haslo do tunela\r\n")
     sock.close()
     return
@@ -109,7 +107,7 @@ def connect_to_onet(UOkey, nickname, sock, sockets):
     return onet
 
 
-def mainLoop(ID, UOkey, encode, end, lbold, lemoty, lkolor, nickname, onet, sock, sockets):
+def mainLoop(UOkey, encode, end, lbold, lemoty, lkolor, nickname, onet, sock, sockets):
     while 1:
         (dr, dw, de) = select.select(sockets, [], [])
         for ready in dr:
@@ -126,7 +124,7 @@ def mainLoop(ID, UOkey, encode, end, lbold, lemoty, lkolor, nickname, onet, sock
                                                                                 lkolor, nickname, onet, sock, tmpb)
                 except:
                     get_date_string()
-                    print("[%3d] nick: %s = blad odczytu/zapisu z/do gniazda", (ID, nickname))
+                    print("nick: %s = blad odczytu/zapisu z/do gniazda", (nickname))
                     end = 1
                     break
             if ready == onet:
@@ -170,21 +168,12 @@ def set_proper_encoding(bufor, encode, sock):
 
 ##HERE COMES THE DRAGONS
 
-
-
 global s
 s = create_socket()
 printWelcomeInfo(color, bold, encoding)
 createSocketConnection(s, port, local_ip)
 s.listen(5)
-cID = 1
 while 1:
     c, cinfo = s.accept()
-    get_date_string()
-    sys.stdout.write("[%3d] %s:%s = " % ((cID,) + cinfo))
-
-    threading.Thread(target=init,
-                     args=(c, cID)
-                     ).start()
-    cID += 1
+    threading.Thread(target=init, args=[c]).start()
 s.close()

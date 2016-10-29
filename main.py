@@ -13,7 +13,7 @@ from encoding import applyEncoding, get_proper_encoding
 from fromClientMsgHandler import handleMessageFromClient
 from fromOnetMsgHandler import handleMessageFromOnet
 from util import send, get_date_string, recv
-from welcome_information import send_welcome_messages, printWelcomeInfo
+from welcome_information import send_welcome_messages
 
 color = 0  # obsluga kolorow, 0 aby wylaczyc;
 bold = 0  # obsluga pogrubienia czcionki;
@@ -27,8 +27,24 @@ realname = "Mlecko"  # nazwa
 
 ######################################
 
+def receive_nickname_and_password(client_socket):
+
+    password = ""
+    nickname = ""
+
+    while (password == "") or (nickname == ""):
+        msg = client_socket.recv(1024)
+        if msg == "": return
+        msg = msg.decode()
+        if not msg.find("NICK") == -1:
+            nickname = get_nick(msg)
+        if not msg.find("PASS") == -1:
+            password = get_password(msg)
+    return nickname, password
+
+
+
 def worker(client_socket):
-    whole_message = ""
     config = {'nickname': "",
               'password': "",
               'encode': encoding,
@@ -37,20 +53,11 @@ def worker(client_socket):
               'lemoty': emoty
               }
 
-    while (config['password'] == "") or (config['nickname'] == ""):
-        received_chunk = client_socket.recv(1024)
-        if received_chunk == "": return
-        whole_message += received_chunk.decode()
-        if not whole_message.find("NICK") == -1:
-            config['nickname'] = get_nick(whole_message)
-        if not whole_message.find("PASS") == -1:
-            config['password'] = get_password(whole_message)
-
-    send_welcome_messages(config, client_socket)
+    config['nickname'], config['password'] = receive_nickname_and_password(client_socket)
 
     try:
         checkTunnelPassword(config['password'])
-        config['password'] = extractPassword(config['password'])
+        config['password'] = splitPassword(config['password'])
         config['UOkey'] = authorization(config['nickname'], config['password'])
     except Exception as e:
         print(e)
@@ -61,7 +68,7 @@ def worker(client_socket):
     mainLoop(config, onet, client_socket)
 
 
-def extractPassword(password):
+def splitPassword(password):
     if TUNEL_PASS:
         password = password.split(':')
         if len(password) != 2:
@@ -98,6 +105,7 @@ def connect_to_onet(UOkey, nickname, sock):
 
 
 def mainLoop(config, onet_socket, client_socket):
+    send_welcome_messages(config, client_socket)
     while 1:
         (sockets_with_ready_messages, dw, de) = select.select([client_socket, onet_socket], [], [])
         for socket_with_ready_msg in sockets_with_ready_messages:
@@ -124,7 +132,7 @@ def mainLoop(config, onet_socket, client_socket):
                 received_message = ""
                 try:
                     while 1:
-                        chunk_of_received_msg = socket_with_ready_msg.recv(1024).decode("utf-8", "ignore")
+                        chunk_of_received_msg = recv(socket_with_ready_msg, 1024)
                         if chunk_of_received_msg:
                             if chunk_of_received_msg[len(chunk_of_received_msg) - 1] == '\n':
                                 received_message += chunk_of_received_msg
@@ -143,9 +151,8 @@ def mainLoop(config, onet_socket, client_socket):
 
 client_socket = create_client_socket()
 
-printWelcomeInfo(color, bold, encoding)
-
 createSocketConnection(client_socket, port, local_ip)
+
 client_socket.listen(5)
 while 1:
     socket_accepted, cinfo = client_socket.accept()

@@ -27,7 +27,6 @@ def fetch(host, z, mssl):
 
 
 def get_http(host, z, get_uo=0, mssl=0):
-    print("MICHAL")
     a = fetch(host, z, mssl)
     if get_uo == 1:
         x = a.find("<uoKey>")

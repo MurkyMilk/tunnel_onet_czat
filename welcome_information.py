@@ -19,14 +19,3 @@ def send_welcome_messages(config, sock):
                           ":fake.host 666 nik : 10[Tunel] /sets bold 0 10<---5 010: wylacza pogrubienie czcionki,5 110: wlacza\r\n")))
     sock.send(str.encode(
         ":fake.host 666 nik : 10[Tunel] /sets emoty 0 10<---5 010: %Ihihi%,5 110: <hihi>,5 210: //hihi\r\n"))
-
-
-def printWelcomeInfo(color, bold, encoding):
-    print("onettunel.py v.2010-04 / by Olo (2008-2010) unix.onlinewebshop.net")
-    print("poprawki Husar, 08-07-2011\r\n\r\n")
-    if color == 1:
-        print("Wlaczona obsluga kolorow")
-    else:
-        print("Wylaczona obsluga kolorow")
-    if bold == 1: print("Wlaczona obsluga pogrubienia czcionki")
-    if encoding == 1: print("Wlaczona obsluga kodowania CP1250")

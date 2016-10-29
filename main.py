@@ -43,31 +43,6 @@ def receive_nickname_and_password(client_socket):
     return nickname, password
 
 
-
-def worker(client_socket):
-    config = {'nickname': "",
-              'password': "",
-              'encode': encoding,
-              'lkolor': color,
-              'lbold': bold,
-              'lemoty': emoty
-              }
-
-    config['nickname'], config['password'] = receive_nickname_and_password(client_socket)
-
-    try:
-        checkTunnelPassword(config['password'])
-        config['password'] = splitPassword(config['password'])
-        config['UOkey'] = authorization(config['nickname'], config['password'])
-    except Exception as e:
-        print(e)
-        client_socket.close()
-        return
-
-    onet = connect_to_onet(config['UOkey'], config['nickname'], client_socket)
-    mainLoop(config, onet, client_socket)
-
-
 def splitPassword(password):
     if TUNEL_PASS:
         password = password.split(':')
@@ -104,7 +79,21 @@ def connect_to_onet(UOkey, nickname, sock):
     return onet
 
 
-def mainLoop(config, onet_socket, client_socket):
+def mainLoop(client_socket, config):
+
+    config['nickname'], config['password'] = receive_nickname_and_password(client_socket)
+
+    try:
+        checkTunnelPassword(config['password'])
+        config['password'] = splitPassword(config['password'])
+        config['UOkey'] = authorization(config['nickname'], config['password'])
+    except Exception as e:
+        print(e)
+        client_socket.close()
+        return
+
+    onet_socket = connect_to_onet(config['UOkey'], config['nickname'], client_socket)
+
     send_welcome_messages(config, client_socket)
     while 1:
         (sockets_with_ready_messages, dw, de) = select.select([client_socket, onet_socket], [], [])
@@ -149,6 +138,12 @@ def mainLoop(config, onet_socket, client_socket):
 
 ##HERE COMES THE DRAGONS
 
+config = {'encode': encoding,
+          'lkolor': color,
+          'lbold': bold,
+          'lemoty': emoty
+          }
+
 client_socket = create_client_socket()
 
 createSocketConnection(client_socket, port, local_ip)
@@ -156,5 +151,5 @@ createSocketConnection(client_socket, port, local_ip)
 client_socket.listen(5)
 while 1:
     socket_accepted, cinfo = client_socket.accept()
-    threading.Thread(target=worker, args=[socket_accepted]).start()
+    threading.Thread(target=mainLoop, args=[socket_accepted, config]).start()
 client_socket.close()

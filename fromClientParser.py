@@ -1,7 +1,7 @@
 from util import send
 
 
-def process_message_from_client(UOkey, bufor, encode, lbold, lemoty, lkolor, nickname, onet, sock, tmpb):
+def transform_message_from_client(UOkey, bufor, config , onet, sock, tmpb):
     if tmpb[0] == "PRIVMSG":
         if tmpb[1][0:2] == '#^':
             tmpb[1] = tmpb[1].replace('#^', '^')
@@ -16,27 +16,27 @@ def process_message_from_client(UOkey, bufor, encode, lbold, lemoty, lkolor, nic
         tmpb[2] = tmpb[2].replace('#^', '^')
         bufor = ' '.join(tmpb)
     elif tmpb[0][:2] == "UO":
-        send(sock, ":fake.host 2012 " + nickname + " : 10[Tunel] Twoj UOkey: " + UOkey + "\r\n")
+        send(sock, ":fake.host 2012 " + config['nickname'] + " : 10[Tunel] Twoj UOkey: " + UOkey + "\r\n")
     elif tmpb[0][:4] == "SETS":
         try:
             if tmpb[1] == "kolor":
                 try:
-                    lkolor = int(tmpb[2][0])
+                    config['lkolor'] = int(tmpb[2][0])
                 except:
                     send(sock, "onettunel.py - dozwolone wartosci: 2, 1 i 0\r\n")
             elif tmpb[1] == "kodowanie":
                 try:
-                    encode = int(tmpb[2][0])
+                    config['encode'] = int(tmpb[2][0])
                 except:
                     send(sock, "onettunel.py - dozwolone wartosci: 1 i 0\r\n")
             elif tmpb[1] == "bold":
                 try:
-                    lbold = int(tmpb[2][0])
+                    config['lbold'] = int(tmpb[2][0])
                 except:
                     send(sock, "onettunel.py - dozwolone wartosci: 1 i 0\r\n")
             elif tmpb[1] == "emoty":
                 try:
-                    lemoty = int(tmpb[2][0])
+                    config['lemoty'] = int(tmpb[2][0])
                 except:
                     send(sock, "onettunel.py - dozwolone wartosci: 2, 1 i 0\r\n")
         except:
@@ -46,7 +46,7 @@ def process_message_from_client(UOkey, bufor, encode, lbold, lemoty, lkolor, nic
                         ":fake.host 666 nik : 10[Tunel]  kodowanie:5 %d\r\n"
                         ":fake.host 666 nik : 10[Tunel]  bold:5      %d\r\n"
                         ":fake.host 666 nik : 10[Tunel]  emoty:5     %d\r\n") % (
-                     lkolor, encode, lbold, lemoty))
+                config['lkolor'], config['encode'], config['lbold'], config['lemoty']))
     elif tmpb[0] == "LIST":
         bufor = "SLIST\r\n"
     elif tmpb[0] == "PROTOCTL":
@@ -56,14 +56,14 @@ def process_message_from_client(UOkey, bufor, encode, lbold, lemoty, lkolor, nic
             cammsg = ":WebcamServ!service@service.onet MODE " + tmpb[2] + " +Cam " + tmpb[1] + "\r\n"
         if tmpb[3][:3] == "off":
             cammsg = ":WebcamServ!service@service.onet MODE " + tmpb[2] + " -Cam " + tmpb[1] + "\r\n"
-        if encode == 1:
+        if config['encode'] == 1:
             cammsg = cammsg.replace('\xa1', '\xa5')
             cammsg = cammsg.replace('\xb1', '\xb9')
             cammsg = cammsg.replace('\xa6', '\x8c')
             cammsg = cammsg.replace('\xb6', '\x9c')
             cammsg = cammsg.replace('\xac', '\x8f')
             cammsg = cammsg.replace('\xbc', '\x9f')
-        if encode == 2:
+        if config['encode'] == 2:
             cammsg = cammsg.replace("\xa1", "\xc4\x84")
             cammsg = cammsg.replace("\xc6", "\xc4\x86")
             cammsg = cammsg.replace("\xca", "\xc4\x98")
@@ -84,4 +84,4 @@ def process_message_from_client(UOkey, bufor, encode, lbold, lemoty, lkolor, nic
             cammsg = cammsg.replace("\xbf", "\xc5\xbc")
             send(sock, cammsg)
     send(onet, bufor)
-    return encode, lbold, lemoty, lkolor
+    return config

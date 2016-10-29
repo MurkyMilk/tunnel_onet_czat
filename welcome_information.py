@@ -1,6 +1,6 @@
 
 
-def send_welcome_messages(lbold, lkolor, sock):
+def send_welcome_messages(config, sock):
     sock.send((str.encode(":fake.host 666 nik : 10[Tunel] uzycie:\r\n"
                           ":fake.host 666 nik : 10[Tunel] /set nick 10Twoj_nick\r\n"
                           ":fake.host 666 nik : 10[Tunel] /server 127.0.0.1 7777 10haslo_do_nicka\r\n"
@@ -10,7 +10,7 @@ def send_welcome_messages(lbold, lkolor, sock):
                           ":fake.host 666 nik : 10[Tunel] ustawienia polaczenia:\r\n"
                           ":fake.host 666 nik : 10[Tunel] obsluga kolorow:5              %d\r\n"
                           ":fake.host 666 nik : 10[Tunel] obsluga pogrubienia czcionki:5 %d\r\n"
-                          ":fake.host 666 nik : 10[Tunel] \r\n") % (lkolor, lbold)))
+                          ":fake.host 666 nik : 10[Tunel] \r\n") % (config["lkolor"], config["lbold"])))
     sock.send((str.encode(":fake.host 666 nik : 10[Tunel] komendy:\r\n"
                           ":fake.host 666 nik : 10[Tunel] /sets 10<--- pokazuje ustawienia\r\n"
                           ":fake.host 666 nik : 10[Tunel] /uo 10<--- zwraca UoKey\r\n"

@@ -107,48 +107,45 @@ def connect_to_onet(UOkey, nickname, sock, sockets):
     return onet
 
 
-def mainLoop(UOkey, encode, end, lbold, lemoty, lkolor, nickname, onet, sock, sockets):
+def mainLoop(UOkey, encode, end, lbold, lemoty, lkolor, nickname, onet_socket, client_socket, sockets):
     while 1:
-        (dr, dw, de) = select.select(sockets, [], [])
-        for ready in dr:
-            if ready == sock:
+        (sockets_with_ready_messages, dw, de) = select.select(sockets, [], [])
+        for socket_with_ready_msg in sockets_with_ready_messages:
+            if socket_with_ready_msg == client_socket:
                 try:
-                    bufor = ready.recv(1024).decode("utf-8", "ignore")
-                    if bufor == "":
+                    received_message = recv(socket_with_ready_msg, 1024)
+                    if received_message == "":
                         end = 1
                         break
-                    encode = get_proper_encoding(bufor, encode)
-                    bufor = applyEncoding(bufor, encode, lemoty)
-                    tmpb = bufor.split(' ')
-                    encode, lbold, lemoty, lkolor = process_message_from_client(UOkey, bufor, encode, lbold, lemoty,
-                                                                                lkolor, nickname, onet, sock, tmpb)
-                except:
-                    get_date_string()
-                    print("nick: %s = blad odczytu/zapisu z/do gniazda", (nickname))
+                    encode = get_proper_encoding(received_message, encode)
+                    received_message = applyEncoding(received_message, encode, lemoty)
+                    splitted_received_message = received_message.split(' ')
+                    encode, lbold, lemoty, lkolor = process_message_from_client(UOkey, received_message, encode, lbold, lemoty,
+                                                                                lkolor, nickname, onet_socket, client_socket, splitted_received_message)
+                except Exception as e:
+                    print(e)
                     end = 1
                     break
-            if ready == onet:
-                bufor = ""
+            if socket_with_ready_msg == onet_socket:
+                received_message = ""
                 try:
                     while 1:
-                        bu2 = ready.recv(1024).decode("utf-8", "ignore")
-                        if bu2 == "":
+                        chunk_of_received_msg = socket_with_ready_msg.recv(1024).decode("utf-8", "ignore")
+                        if chunk_of_received_msg == "":
                             end = 1
                             break
-                        if bu2[len(bu2) - 1] == '\n':
-                            bufor += bu2
+                        if chunk_of_received_msg[len(chunk_of_received_msg) - 1] == '\n':
+                            received_message += chunk_of_received_msg
                             break
-                        bufor += bu2
-                    tab = findall("(.*?\n)", bufor)
-                    parse_and_send_incomining_message(encode, lbold, lemoty, lkolor, nickname, sock, tab)
+                        received_message += chunk_of_received_msg
+                    splitted_received_message = findall("(.*?\n)", received_message)
+                    parse_and_send_incomining_message(encode, lbold, lemoty, lkolor, nickname, client_socket, splitted_received_message)
                 except:
-                    get_date_string()
-                    print("[%3d] nick: %s = blad odczytu/zapisu z/do gniazda", (ID, nickname))
                     end = 1
                     break
         if end == 1:
-            sock.close()
-            onet.close()
+            client_socket.close()
+            onet_socket.close()
             break
 
 
